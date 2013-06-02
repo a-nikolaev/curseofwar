@@ -37,7 +37,7 @@
 /*                           Global Constants                                */
 /*****************************************************************************/
 
-#define ESCAPE       '\033'
+#define ESCAPE     '\033'
 #define K_UP       65
 #define K_DOWN     66
 #define K_RIGHT    67
