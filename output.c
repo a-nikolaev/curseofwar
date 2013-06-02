@@ -219,6 +219,7 @@ void output_grid(struct state *st, int ktime) {
   
   output_key (y+4, 57, "S", key_style, "slow down", text_style);
   output_key (y+3, 57, "F", key_style, "speed up", text_style);
+  output_key (y+5, 57, "P", key_style, "pause", text_style);
   
   for(p=0; p<MAX_PLAYER; ++p) {
     if (p == NEUTRAL) continue;

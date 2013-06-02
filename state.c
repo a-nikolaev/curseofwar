@@ -50,6 +50,7 @@ void state_init(struct state *s, int w, int h, int keep_random, int locations_nu
   srand(time(NULL));
   
   s->speed = speed;
+  s->prev_speed = s->speed;
   s->dif = dif;
 
   grid_init(&s->grid, w, h);

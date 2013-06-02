@@ -326,10 +326,20 @@ int update_from_input( struct state *st )
                     finished = 1;                     /* quit program */
                     break;
                 case 'f':
+                    st->prev_speed = st->speed;
                     st->speed = faster(st->speed);
                     break;
                 case 's':
+                    st->prev_speed = st->speed;
                     st->speed = slower(st->speed);
+                    break;
+                case 'p':
+                    if (st->speed == sp_pause)
+                      st->speed = st->prev_speed;
+                    else {
+                      st->prev_speed = st->speed;
+                      st->speed = sp_pause;
+                    }
                     break;
                 case 'h': case K_LEFT:
                   st->cursor.i--;

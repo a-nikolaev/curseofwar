@@ -64,6 +64,7 @@ struct state {
   int controlled;
 
   enum config_speed speed;
+  enum config_speed prev_speed;
   enum config_dif dif;
 };
 
