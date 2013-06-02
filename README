@@ -1,0 +1,165 @@
+                                        __                      
+           ____                        /  ]                     
+          / __ \_ _ ___ ___ ___    __ _| |_  /\      /\___ ___  
+        _/ /  \/ | |X _/ __/ __\  /   \   /  \ \ /\ / /__ \X _/ 
+        \ X    | | | | |__ | __X  | X || |    \ V  V // _ | |   
+         \ \__/\ __X_| \___/___/  \___/| |     \ /\ / \___X_|   
+          \____/                       |/       V  V            
+
+        Curse of War -- Real Time Strategy Game for Linux.
+        Copyright (C) 2013 Alexey Nikolaev.
+
+Summary
+=======
+  This is a fast-paced action strategy game for Linux implemented using 
+  ncurses user interface.
+
+  Unlike most RTS, you are not controlling units, but focus on high-level 
+  strategic planning: Building infrastructure, securing resources, 
+  and moving your armies.
+
+  The core game mechanics turns out to be quite close to WWI-WWII type of 
+  warfare, however, there is no explicit reference to any historical period.
+
+  See "How to play" section for more details.
+
+Build with
+==========
+  $ make
+
+Command line arguments
+======================
+
+  -W width
+    Map width (default is 21)
+
+  -H height
+    Map height (default is 21)
+    
+  -l [2|3|4]
+    Number of starting locations for the countries (default is 4).
+  
+  -r
+    Totally random initial conditions, overrides the -l option.
+
+  -d [ee|e|n|h|hh]
+    Difficulty level from the easiest to the hardest (default is normal).
+  
+  -s [p|sss|ss|s|n|f|ff|fff]
+    Game speed from the slowest to the fastest (default is normal).
+  
+  -h
+    Display help information
+
+How to play
+===========
+
+  Normally, the game starts with 4 small countries in the corners of the map. 
+  You start as the ruler of the Green country, and your goal is to conquer 
+  the whole map.
+ 
+  Tiles
+  -----
+
+  The map is made of hexagonal tiles. They are: 
+        
+  /\^   Mountains, cannot be populated
+
+  /$\   Gold mines, cannot be populated too.
+        This is the source of gold for your country.
+        To control a mine, surround it with your army
+
+
+   n    Villages, have the slowest population growth (+10%)
+
+  i=i   Towns, average population growth (+20%)
+
+  W#W   Fortresses, high population growth (+30%)
+
+    
+   -    Grassland, normal habitable territory
+
+  People
+  ------
+
+  People are your primary resource. Thriving popluation is essential for your
+  victory.
+  
+  Every tile can support at most 499 people from each country.
+  When people from more than one country occupy the same tile, they fight.
+  The country that has the highest population at the tile is called the tile
+  owner.
+
+  The population of the tile owner is shown on all grassland tiles as follows:
+
+   .      1 - 3    citizens
+  ..      4 - 6
+  ...     7 - 12
+   :     13 - 25
+  .:     26 - 50
+  .:.    51 - 100
+   ::   101 - 200
+  .::   201 - 400
+  :::   400 - 499
+
+  People migrate from highly populated tiles to less populated tiles.
+
+  Population grows only in cities. In villages by 10%, in towns by 20%, and 
+  fortresses by 30% every simulation step. By controlling cities, you control 
+  their surrounding territory.
+
+  Flags
+  -----
+
+  Every country can put flags on the map. Flags change migration rates, 
+  so that people of your country start gathering at the tiles with flags. 
+
+  Player's flags are shown as white "P" on the right side of a tile.
+  Flags of the computer opponents are shown as "x" on the left side of a tile.
+
+  The flags can be used to increase population of your own cities, as well as
+  for conquering foreign territories.
+
+  When countries are fighting for a city, and if the damage to the defender's 
+  army is significant, the city can be destroyed: A fortress becomes a town, 
+  a town becomes a village, and the village gets completely burnt by the invaders.
+  
+  Countries
+  ---------
+
+  Computer opponents differ in personality, and it affects the way they fight.
+
+Controls
+========
+
+  Arrow keys and H, J, K, L are for moving the cursor
+
+  R or V   build village -> town -> fortress
+  
+  Space    add/remove a flag
+  X        remove all your flags
+  C        remove a half of your flags
+  
+  S        slower
+  F        faster
+
+  Q        quit
+
+License
+=======
+  Curse of War -- Real Time Strategy Game for Linux.
+  Copyright (C) 2013 Alexey Nikolaev.
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
