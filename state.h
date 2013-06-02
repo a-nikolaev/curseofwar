@@ -61,6 +61,8 @@ struct state {
 
   struct country country [MAX_PLAYER];
 
+  int map_seed;
+
   int controlled;
 
   enum config_speed speed;
@@ -80,7 +82,7 @@ struct state {
       but players have their initial locations in the corners of the map.
       function conflict() is used to generate this game mode
  */
-void state_init(struct state *s, int w, int h, int keep_random, int locations_num, enum config_speed speed, enum config_dif dif);
+void state_init(struct state *s, int w, int h, unsigned int map_seed, int keep_random, int locations_num, enum config_speed speed, enum config_dif dif);
 
 /* 
   kings_move(&s)

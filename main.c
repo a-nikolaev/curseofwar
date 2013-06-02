@@ -27,6 +27,7 @@
 #include <getopt.h>
 #include <math.h>
 #include <sys/time.h>
+#include <time.h>
 
 #include "common.h"
 #include "grid.h"
@@ -83,6 +84,8 @@ void print_help() {
     "\tDifficulty level from the easiest to the hardest (default is normal).\n\n"
     "-s [p|sss|ss|s|n|f|ff|fff]\n"
     "\tGame speed from the slowest to the fastest (default is normal).\n\n"
+    "-R seed\n"
+    "\tSpecify a random seed (unsigned integer) for map generation.\n\n"
     "-h\n"
     "\tDisplay this help \n\n"
   );
@@ -128,8 +131,10 @@ void run (struct state *st) {
 /*****************************************************************************/
 /*                                    Main                                   */
 /*****************************************************************************/
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]){
+  /* Initialize pseudo random number generator */
+  srand(time(NULL));
+
   /* Parse argv */
   int r_flag = 0; // random
   int dif_val = dif_normal; // diffiulty
@@ -137,10 +142,11 @@ int main(int argc, char* argv[])
   int w_val = 21; // width
   int h_val = 21; // height
   int l_val = 4;  // the number of starting locations
+  unsigned int seed_val = rand();
 
 	opterr = 0;
   int c;
-	while ((c = getopt (argc, argv, "hrW:H:l:d:s:o:")) != -1){
+	while ((c = getopt (argc, argv, "hrW:H:l:d:s:o:R:")) != -1){
 		switch(c){
 			case 'r': r_flag = 1; break;
 			//case 'f': f_val = optarg; break;
@@ -163,6 +169,14 @@ int main(int argc, char* argv[])
 			case 'l': { char* endptr = NULL;
 									l_val = IN_SEGMENT(strtol(optarg, &endptr, 10), 2, 4);
 									if (*endptr != '\0') {
+                    print_help();
+										return 1;
+									}
+								};
+								break;
+			case 'R': { char* endptr = NULL;
+									seed_val = abs(strtol(optarg, &endptr, 10));
+									if (*endptr != '\0' || *optarg == '\0') {
                     print_help();
 										return 1;
 									}
@@ -264,7 +278,7 @@ int main(int argc, char* argv[])
 
 
   struct state st;
-  state_init(&st, w_val, h_val, r_flag, l_val, sp_val, dif_val);
+  state_init(&st, w_val, h_val, seed_val, r_flag, l_val, sp_val, dif_val);
 
   /* initialize aio buffer for the first read and place call */
   setup_aio_buffer(&kbcbuf);                         
@@ -290,6 +304,8 @@ int main(int argc, char* argv[])
   curs_set(1);
   clear();
   endwin();
+
+  printf ("Random seed was %i\n", st.map_seed);
   return 0;
 }
 

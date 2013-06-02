@@ -18,7 +18,6 @@
  
 ******************************************************************************/
 #include "state.h"
-#include <time.h>
 #include <stdio.h>
 #include <math.h>
 
@@ -46,15 +45,18 @@ enum config_speed slower(enum config_speed sp){
   }
 }
 
-void state_init(struct state *s, int w, int h, int keep_random, int locations_num, enum config_speed speed, enum config_dif dif){
-  srand(time(NULL));
+void state_init(struct state *s, int w, int h, unsigned int map_seed, int keep_random, int locations_num, enum config_speed speed, enum config_dif dif){
   
   s->speed = speed;
   s->prev_speed = s->speed;
   s->dif = dif;
+  s->map_seed = map_seed;
 
+  /* Initialize map generation with the map_seed */
+  srand(s->map_seed);
+
+  /* Map generation starts */
   grid_init(&s->grid, w, h);
-  
   /* player controlled from the keyboard */
   s->controlled = 1;
 
@@ -64,6 +66,7 @@ void state_init(struct state *s, int w, int h, int keep_random, int locations_nu
     int players[] = {2, 3, 4, 5, 6, 7};
     conflict(&s->grid, players, 6, locations_num, s->controlled);
   }
+  /* Map is ready */
 
   int p;
   for(p = 0; p<MAX_PLAYER; ++p) {

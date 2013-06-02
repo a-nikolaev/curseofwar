@@ -47,7 +47,10 @@ Command line arguments
   
   -s [p|sss|ss|s|n|f|ff|fff]
     Game speed from the slowest to the fastest (default is normal).
-  
+
+  -R seed
+    Specify a random seed (unsigned integer) for map generation.
+
   -h
     Display help information
 
