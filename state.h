@@ -50,6 +50,10 @@ enum config_speed slower(enum config_speed);
 
       controlled is the player id of the human controlled player
 
+      condiitions is the initial conditions quality (0==random, 1==best, 4==worst)
+
+      inequality (from 0 to 4) is the level of countries' inequality 
+
       speed and dif are the game speed and the difficulty level
  */
 struct state {
@@ -64,6 +68,9 @@ struct state {
   int map_seed;
 
   int controlled;
+
+  int conditions;
+  int inequality;
 
   enum config_speed speed;
   enum config_speed prev_speed;
@@ -82,7 +89,8 @@ struct state {
       but players have their initial locations in the corners of the map.
       function conflict() is used to generate this game mode
  */
-void state_init(struct state *s, int w, int h, unsigned int map_seed, int keep_random, int locations_num, enum config_speed speed, enum config_dif dif);
+void state_init(struct state *s, int w, int h, unsigned int map_seed, int keep_random, int locations_num, 
+    int conditions, int inequality, enum config_speed speed, enum config_dif dif);
 
 /* 
   kings_move(&s)

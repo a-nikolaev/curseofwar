@@ -21,11 +21,15 @@
 #define _GRID_H
 
 #include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 #include "common.h"
 
 #define FLAG_ON 1
 #define FLAG_OFF 0
 #define FLAG_POWER 8
+
+#define RANDOM_INEQUALITY -1
 
 /* enum unit_class
  *
@@ -118,8 +122,16 @@ void grid_init(struct grid *g, int w, int h);
  *  locations_num is the number of starting locations (can be equal to 2, 3, or 4)
  *  human_player is the id of the human player (usually = 1) 
  *
+ *  conditions = {1, ... number of available locations}, 1 = the best.
+ *
+ *  ineq = inequality from 0 to 4.
+ *
  */
-void conflict (struct grid *g, int players[], int players_num, int locations_num, int human_player);
+int conflict (struct grid *g, int players[], int players_num, int locations_num, int human_player, int conditions, int ineq);
+
+/* is_conected(&g)
+ * Check connectedness of the grid */
+int is_connected (struct grid *g);
 
 /* struct flag_grid
  *

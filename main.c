@@ -77,11 +77,15 @@ void print_help() {
     "-H height\n"
     "\tMap height (default is 21)\n\n"
     "-l [2|3|4]\n"
-    "\tNumber of starting locations for the countries (default is 4).\n\n"
+    "\tSet the number of countries (default is 4).\n\n"
+    "-i [0|1|2|3|4]\n"
+    "\tInequality between the countries (0 is the lowest, 4 in the highest).\n\n"
+    "-q [1|2|3|4]\n"
+    "\tChoose player's location by its quality (1 = the best available on the map, 4 = the worst).\n\n"
     "-r\n"
-    "\tTotally random initial conditions, overrides the -l option.\n\n"
+    "\tAbsolutely random initial conditions, overrides options -l, -i, and -q.\n\n"
     "-d [ee|e|n|h|hh]\n"
-    "\tDifficulty level from the easiest to the hardest (default is normal).\n\n"
+    "\tDifficulty level (AI) from the easiest to the hardest (default is normal).\n\n"
     "-s [p|sss|ss|s|n|f|ff|fff]\n"
     "\tGame speed from the slowest to the fastest (default is normal).\n\n"
     "-R seed\n"
@@ -143,10 +147,12 @@ int main(int argc, char* argv[]){
   int h_val = 21; // height
   int l_val = 4;  // the number of starting locations
   unsigned int seed_val = rand();
+  int conditions_val = 0;
+  int ineq_val = RANDOM_INEQUALITY;
 
 	opterr = 0;
   int c;
-	while ((c = getopt (argc, argv, "hrW:H:l:d:s:o:R:")) != -1){
+	while ((c = getopt (argc, argv, "hrW:H:i:l:q:d:s:R:")) != -1){
 		switch(c){
 			case 'r': r_flag = 1; break;
 			//case 'f': f_val = optarg; break;
@@ -166,9 +172,25 @@ int main(int argc, char* argv[]){
 									}
 								};
 								break;
+			case 'i': { char* endptr = NULL;
+									ineq_val = strtol(optarg, &endptr, 10);
+									if (*endptr != '\0' || ineq_val < 0 || ineq_val > 4) {
+                    print_help();
+										return 1;
+									}
+								};
+								break;
 			case 'l': { char* endptr = NULL;
 									l_val = IN_SEGMENT(strtol(optarg, &endptr, 10), 2, 4);
 									if (*endptr != '\0') {
+                    print_help();
+										return 1;
+									}
+								};
+								break;
+			case 'q': { char* endptr = NULL;
+									conditions_val = strtol(optarg, &endptr, 10);
+									if (*endptr != '\0' || conditions_val < 1 || conditions_val > 4) {
                     print_help();
 										return 1;
 									}
@@ -278,7 +300,7 @@ int main(int argc, char* argv[]){
 
 
   struct state st;
-  state_init(&st, w_val, h_val, seed_val, r_flag, l_val, sp_val, dif_val);
+  state_init(&st, w_val, h_val, seed_val, r_flag, l_val, conditions_val, ineq_val, sp_val, dif_val);
 
   /* initialize aio buffer for the first read and place call */
   setup_aio_buffer(&kbcbuf);                         

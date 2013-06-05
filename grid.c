@@ -88,6 +88,84 @@ void grid_init(struct grid *g, int w, int h){
   }
 }
 
+/* helper. 
+ * floodfill with value val, the closest distance has priority */
+void floodfill_closest (struct grid *g, int u[MAX_WIDTH][MAX_HEIGHT], int d[MAX_WIDTH][MAX_HEIGHT], int x, int y, int val, int dist) {
+  if (x < 0 || x >= g->width || y < 0 || y >= g->height || is_inhabitable(g->tiles[x][y].cl) == 0 || d[x][y] <= dist) {
+    return;
+  }
+  u[x][y] = val;
+  d[x][y] = dist;
+
+  int k;
+  for (k = 0; k<DIRECTIONS; ++k) 
+    floodfill_closest(g, u, d, x+dirs[k].i, y+dirs[k].j, val, dist+1);
+}
+
+/* eval_locations
+ *  evalueate locations loc[],
+ *  the result is stored in result[]
+ *   */
+void eval_locations (struct grid *g, struct loc loc[], int result[], int len){
+  int u [MAX_WIDTH][MAX_HEIGHT];
+  int d [MAX_WIDTH][MAX_HEIGHT];
+  int i, j;
+  const int unreachable = -1;
+  const int competition = -2;
+
+  for(i=0; i<g->width; ++i)
+    for(j=0; j<g->height; ++j) {
+      d[i][j] = MAX_WIDTH * MAX_HEIGHT + 1;
+      u[i][j] = unreachable;
+    }
+
+  int k;
+  for(k=0; k<len; ++k) {
+    /* flood fill with values {0,... len-1} */
+    floodfill_closest (g, u, d, loc[k].i, loc[k].j, k, 0);
+  }
+
+  int x, y;
+  /*
+  for(i=0; i<g->width; ++i) 
+    for(j=0; j<g->height; ++j){
+      if (is_inhabitable (g->tiles[i][j].cl)) {
+        g->tiles[i][j].units[u[i][j]][citizen] = 1;
+        g->tiles[i][j].pl = u[i][j];
+      }
+    }
+  */
+  for(i=0; i<g->width; ++i) 
+    for(j=0; j<g->height; ++j){
+      if (g->tiles[i][j].cl == mine) {
+        int single_owner = unreachable;
+        int max_dist = 0;
+        for (k = 0; k<DIRECTIONS; ++k) {
+          x = i + dirs[k].i;
+          y = j + dirs[k].j;
+          if (x < 0 || x >= g->width || y < 0 || y >= g->height || is_inhabitable(g->tiles[x][y].cl) == 0) {
+            continue;
+          }
+
+          //g->tiles[x][y].units[u[x][y]][citizen] = 401;
+          //g->tiles[x][y].pl = u[x][y];
+
+          if (single_owner == unreachable) {
+            single_owner = u[x][y];
+            max_dist = d[x][y];
+          }
+          else {
+            if (u[x][y] == single_owner) max_dist = MAX(max_dist, d[x][y]);
+            else if (u[x][y] != unreachable) single_owner = competition;
+          }
+        }
+        if (single_owner != competition && single_owner != unreachable)
+          result[single_owner] += (int) ( (float)(MAX_WIDTH + MAX_HEIGHT) * exp(-0.5 * (float)max_dist*max_dist / (MAX_WIDTH*MAX_HEIGHT)) );
+      }
+    }
+  return;
+}
+
 /* simple shuffling of an array of integers */
 void shuffle (int arr[], int len) {
   int t, i, j, s;
@@ -100,7 +178,22 @@ void shuffle (int arr[], int len) {
   }
 }
 
-void conflict (struct grid *g, int players[], int players_num, int locations_num, int human_player) {
+/* sort in increasing order of val[] */
+void sort (int val[], int item[], int len) {
+  int i, j, k;
+  int t;
+  for (i=0; i<len-1; ++i) {
+    k = i;
+    for (j=i+1; j<len; ++j) {
+      if (val[j] < val[k]) k = j;
+    }
+    /* swap ith and kth elements */
+    t = val[i]; val[i] = val[k]; val[k] = t;
+    t = item[i]; item[i] = item[k]; item[k] = t;
+  }
+}
+
+int conflict (struct grid *g, int players[], int players_num, int locations_num, int human_player, int conditions, int ineq) {
   int i, j, p, c;
   /* first, remove all cities */
   for(i=0; i<g->width; ++i) {
@@ -120,11 +213,39 @@ void conflict (struct grid *g, int players[], int players_num, int locations_num
   int d = 2;
   int m = 1;
   
-  locations_num = IN_SEGMENT(locations_num, 2, 4);
   /* starting locations arrays */
   int xs[] = {d, g->width-1-d, d, g->width-1-d};
   int ys[] = {d, g->height-1-d, g->height-1-d, d};
+  int available_loc_num = 4;
   
+  locations_num = IN_SEGMENT(locations_num, 2, available_loc_num);
+  
+  /* eval locations */
+  struct loc loc_arr[] = {{xs[0],ys[0]}, {xs[1], ys[1]}, {xs[2],ys[2]}, {xs[3],ys[3]}};
+  int eval_result[] = {0, 0, 0, 0};
+  int loc_index[] = {0, 1, 2, 3};
+  /* put grassland at starting locations */
+  for(i=0; i<available_loc_num; ++i)
+    g->tiles[xs[i]][ys[i]].cl = grassland;
+  eval_locations(g, loc_arr, eval_result, available_loc_num);
+  sort(eval_result, loc_index, available_loc_num);
+
+  /* Compute inequality */
+  if (ineq != RANDOM_INEQUALITY)
+  {
+    float avg = 0;
+    for(i=0; i<available_loc_num; ++i) avg += eval_result[i];
+    avg = avg / (float)available_loc_num;
+    float var = 0;
+    for(i=0; i<available_loc_num; ++i) 
+      var += pow(eval_result[i] - avg, 2);
+    var = var / (float)available_loc_num; // population variance
+
+    int diff = sqrt(var);
+    int x = diff * 100 / avg;
+    if ( (x < 20*ineq && ineq>0) || (x > 20*(ineq+1) && ineq<4) ) return -1;
+  }
+
   int num = MIN(locations_num, players_num);
  
   /* a shuffled copy of the players array */
@@ -134,15 +255,23 @@ void conflict (struct grid *g, int players[], int players_num, int locations_num
   shuffle(sh_players, players_num);
 
   /* shift in the positions arrays */
-  int di = rand() % locations_num;
+  /* choose at random */
+  int di = rand() % available_loc_num;
   int ihuman = rand() % num;
+  /* choose specific conditions {1,... 4}, 1==best, 4==worst */
+  if (conditions > 0) {
+    ihuman = rand() % num;
+    int select = IN_SEGMENT(available_loc_num - conditions, 0, available_loc_num-1);
+    di = (loc_index[select] - ihuman + available_loc_num) % available_loc_num;
+  }
+  
   i = 0;
   while (i < num) {
-    int ii = (i + di) % locations_num;
+    int ii = (i + di + available_loc_num) % available_loc_num;
     int x = xs[ii];
     int y = ys[ii];
     g->tiles[x][y].cl = castle;
-    if (human_player && ihuman == i) 
+    if (human_player != NEUTRAL && ihuman == i) 
       g->tiles[x][y].pl = human_player;
     else 
       g->tiles[x][y].pl = sh_players[i];
@@ -168,6 +297,40 @@ void conflict (struct grid *g, int players[], int players_num, int locations_num
 
   /* free allocated memory */
   free(sh_players);
+
+  return 0;
+}
+
+/* helper */
+void floodfill (struct grid *g, int u[MAX_WIDTH][MAX_HEIGHT], int x, int y, int val) {
+  if (x < 0 || x >= g->width || y < 0 || y >= g->height || is_inhabitable(g->tiles[x][y].cl) == 0 || 
+      u[x][y] == val) {
+    return;
+  }
+  u[x][y] = val;
+  int k;
+  for (k = 0; k<DIRECTIONS; ++k) 
+    floodfill(g, u, x+dirs[k].i, y+dirs[k].j, val);
+}
+
+int is_connected (struct grid *g) {
+  int m [MAX_WIDTH][MAX_HEIGHT];
+  int i, j;
+  for(i=0; i<g->width; ++i)
+    for(j=0; j<g->height; ++j)
+      m[i][j] = 0;
+
+  int colored = 0;
+  for(i=0; i<g->width; ++i) {
+    for(j=0; j<g->height; ++j) {
+      if (g->tiles[i][j].pl != NEUTRAL) {
+        if (colored && m[i][j] == 0) return 0;
+        colored = 1;
+        floodfill(g, m, i, j, 1);
+      }
+    }
+  }
+  return 1;
 }
 
 void flag_grid_init(struct flag_grid *fg, int w, int h) {

@@ -45,26 +45,35 @@ enum config_speed slower(enum config_speed sp){
   }
 }
 
-void state_init(struct state *s, int w, int h, unsigned int map_seed, int keep_random, int locations_num, enum config_speed speed, enum config_dif dif){
+void state_init(struct state *s, int w, int h, unsigned int map_seed, int keep_random, int locations_num, 
+    int conditions, int inequality, enum config_speed speed, enum config_dif dif){
   
   s->speed = speed;
   s->prev_speed = s->speed;
   s->dif = dif;
   s->map_seed = map_seed;
+  s->conditions = conditions;
+  s->inequality = inequality;
 
+  /* player controlled from the keyboard */
+  s->controlled = 1;
+  //int players[] = {7, 2, 3, 5};
+  //int players[] = {3, 4, 4, 6};
+  int players[] = {2, 3, 4, 5, 6, 7};
+  
   /* Initialize map generation with the map_seed */
   srand(s->map_seed);
 
   /* Map generation starts */
-  grid_init(&s->grid, w, h);
-  /* player controlled from the keyboard */
-  s->controlled = 1;
+  {
+    int conflict_code = 0;
+    do {
+      grid_init(&s->grid, w, h);
 
-  if (!keep_random) {
-    //int players[] = {7, 2, 3, 5};
-    //int players[] = {3, 4, 4, 6};
-    int players[] = {2, 3, 4, 5, 6, 7};
-    conflict(&s->grid, players, 6, locations_num, s->controlled);
+      conflict_code = 0;
+      if (!keep_random) 
+        conflict_code = conflict(&s->grid, players, 6, locations_num, s->controlled, s->conditions, s->inequality);
+    } while(conflict_code != 0 || !is_connected(&s->grid));
   }
   /* Map is ready */
 
