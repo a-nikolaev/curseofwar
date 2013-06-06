@@ -72,6 +72,8 @@ struct state {
   int conditions;
   int inequality;
 
+  int xskip;
+
   enum config_speed speed;
   enum config_speed prev_speed;
   enum config_dif dif;
@@ -89,7 +91,8 @@ struct state {
       but players have their initial locations in the corners of the map.
       function conflict() is used to generate this game mode
  */
-void state_init(struct state *s, int w, int h, unsigned int map_seed, int keep_random, int locations_num, 
+void state_init(struct state *s, int w, int h, enum stencil shape,
+    unsigned int map_seed, int keep_random, int locations_num, 
     int conditions, int inequality, enum config_speed speed, enum config_dif dif);
 
 /* 

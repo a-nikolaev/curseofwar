@@ -30,8 +30,16 @@ int is_a_city(enum tile_class t) {
 
 int is_inhabitable(enum tile_class t) {
   switch(t) {
+    case abyss:
     case mountain:
     case mine: return 0;
+    default: return 1;
+  }
+}
+
+int is_visible(enum tile_class t) {
+  switch(t) {
+    case abyss: return 0;
     default: return 1;
   }
 }
@@ -87,6 +95,108 @@ void grid_init(struct grid *g, int w, int h){
     }
   }
 }
+
+/* Stencils */
+int stencil_avlbl_loc_num (enum stencil st){
+  switch(st) {
+    case st_rhombus: return 4;
+    case st_rect: return 4;
+    case st_hex: return 6;
+  }
+  return 0;
+}
+
+#define X_OF_IJ(i,j) 0.5*(j) + (i)
+#define Y_OF_IJ(i,j) (float)(j)
+
+void stencil_rhombus (struct grid *g, int d, struct loc loc[MAX_AVLBL_LOC]) {
+  int xs[] = {d, g->width-1-d, d, g->width-1-d};
+  int ys[] = {d, g->height-1-d, g->height-1-d, d};
+  int loc_num = 4;
+  int k;
+  for(k=0; k<loc_num; ++k){
+    loc[k].i = xs[k];
+    loc[k].j = ys[k];
+  }
+}
+
+void stencil_rect (struct grid *g, int d, struct loc loc[MAX_AVLBL_LOC]) {
+  int i, j;
+  float x, y;
+  float epsilon = 0.1;
+  float x0 = X_OF_IJ(0, g->height-1) - epsilon;
+  float y0 = Y_OF_IJ(0, 0) - epsilon;
+  float x1 = X_OF_IJ(g->width-1, 0) + epsilon;
+  float y1 = Y_OF_IJ(0, g->height-1) + epsilon;
+  for (i=0; i<g->width; ++i)
+    for (j=0; j<g->height; ++j) {
+      x = X_OF_IJ(i,j);
+      y = Y_OF_IJ(i,j);
+      if (x<x0 || x>x1 || y<y0 || y>y1)
+        g->tiles[i][j].cl = abyss;
+    }
+
+  int loc_num = 4;
+  int dx = g->height/2;
+  struct loc temp_loc[] = { 
+    {dx+d-1, d}, 
+    {g->width-dx-1-d+1, g->height-1-d},
+    {d+1, g->height-1-d},
+    {g->width-1-d-1, d}
+  };
+  int k;
+  for(k=0; k<loc_num; ++k){
+    loc[k] = temp_loc[k];
+  }
+}
+
+void stencil_hex (struct grid *g, int d, struct loc loc[MAX_AVLBL_LOC]) {
+  int i, j;
+  int dx = g->height/2;
+  for (i=0; i<g->width; ++i)
+    for (j=0; j<g->height; ++j) {
+      if (i+j<dx || i+j>g->width-1+g->height-1-dx)
+        g->tiles[i][j].cl = abyss;
+    }
+
+  int loc_num = 6;
+  struct loc temp_loc[] = { 
+    {dx+d-2,            d}, // tl 
+    {d,                 g->height-1-d}, // bl
+    {g->width-1-d,      dx}, // cr
+    {d,                 dx}, // cl
+    {g->width-1-d-2+2,  d}, // tr
+    {g->width-1-dx-d+2, g->height-1-d} // br 
+  };
+  int k;
+  for(k=0; k<loc_num; ++k){
+    loc[k] = temp_loc[k];
+  }
+}
+
+void apply_stencil(enum stencil st, struct grid *g, int d, struct loc loc[MAX_AVLBL_LOC], int *avlbl_loc_num) {
+  *avlbl_loc_num = stencil_avlbl_loc_num(st);
+
+  switch(st){
+    case st_rhombus: stencil_rhombus(g, d, loc); break;
+    case st_rect: stencil_rect(g, d, loc); break;
+    case st_hex: stencil_hex(g, d, loc); break;
+    default: ; 
+  }
+  int i, j;
+  for (i=0; i<g->width; ++i)
+    for (j=0; j<g->height; ++j) {
+      if (g->tiles[i][j].cl == abyss) {
+        int p;
+        for(p=0; p<MAX_PLAYER; ++p){
+          g->tiles[i][j].units[p][citizen] = 0;
+          g->tiles[i][j].pl = NEUTRAL;
+        }
+      }
+    }
+}
+
+/* Ended Stencils */
 
 /* helper. 
  * floodfill with value val, the closest distance has priority */
@@ -193,7 +303,9 @@ void sort (int val[], int item[], int len) {
   }
 }
 
-int conflict (struct grid *g, int players[], int players_num, int locations_num, int human_player, int conditions, int ineq) {
+int conflict (struct grid *g, struct loc loc_arr[], int available_loc_num,
+    int players[], int players_num, int locations_num, int human_player, int conditions, int ineq) 
+{
   int i, j, p, c;
   /* first, remove all cities */
   for(i=0; i<g->width; ++i) {
@@ -210,23 +322,14 @@ int conflict (struct grid *g, int players[], int players_num, int locations_num,
     }
   }
 
-  int d = 2;
-  int m = 1;
-  
-  /* starting locations arrays */
-  int xs[] = {d, g->width-1-d, d, g->width-1-d};
-  int ys[] = {d, g->height-1-d, g->height-1-d, d};
-  int available_loc_num = 4;
-  
   locations_num = IN_SEGMENT(locations_num, 2, available_loc_num);
   
   /* eval locations */
-  struct loc loc_arr[] = {{xs[0],ys[0]}, {xs[1], ys[1]}, {xs[2],ys[2]}, {xs[3],ys[3]}};
-  int eval_result[] = {0, 0, 0, 0};
-  int loc_index[] = {0, 1, 2, 3};
+  int eval_result[] = {0, 0, 0, 0, 0, 0, 0};
+  int loc_index[] = {0, 1, 2, 3, 4, 5, 6};
   /* put grassland at starting locations */
   for(i=0; i<available_loc_num; ++i)
-    g->tiles[xs[i]][ys[i]].cl = grassland;
+    g->tiles[loc_arr[i].i][loc_arr[i].j].cl = grassland;
   eval_locations(g, loc_arr, eval_result, available_loc_num);
   sort(eval_result, loc_index, available_loc_num);
 
@@ -258,7 +361,7 @@ int conflict (struct grid *g, int players[], int players_num, int locations_num,
   /* choose at random */
   int di = rand() % available_loc_num;
   int ihuman = rand() % num;
-  /* choose specific conditions {1,... 4}, 1==best, 4==worst */
+  /* choose specific conditions {1,... N}, 1==best, N==worst */
   if (conditions > 0) {
     ihuman = rand() % num;
     int select = IN_SEGMENT(available_loc_num - conditions, 0, available_loc_num-1);
@@ -268,8 +371,8 @@ int conflict (struct grid *g, int players[], int players_num, int locations_num,
   i = 0;
   while (i < num) {
     int ii = (i + di + available_loc_num) % available_loc_num;
-    int x = xs[ii];
-    int y = ys[ii];
+    int x = loc_arr[ii].i;
+    int y = loc_arr[ii].j;
     g->tiles[x][y].cl = castle;
     if (human_player != NEUTRAL && ihuman == i) 
       g->tiles[x][y].pl = human_player;
@@ -283,6 +386,7 @@ int conflict (struct grid *g, int players[], int players_num, int locations_num,
     int ri = dirs[dir].i;
     int rj = dirs[dir].j;
     
+    int m = 1;
     int mine_i = x + m*ri;
     int mine_j = y + m*rj;
     g->tiles[mine_i][mine_j].cl = mine;

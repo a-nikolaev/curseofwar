@@ -30,6 +30,7 @@
 #define FLAG_POWER 8
 
 #define RANDOM_INEQUALITY -1
+#define MAX_AVLBL_LOC 7
 
 /* enum unit_class
  *
@@ -48,7 +49,7 @@ enum unit_class { citizen=0 };
  *    (castles have the highest rate, while villages have the lowest).
  *
  * */
-enum tile_class { mountain, mine, grassland, village, town, castle };
+enum tile_class { abyss, mountain, mine, grassland, village, town, castle };
 
 /* is_a_city(t)
     returns 1 for village, town, or castle */
@@ -58,6 +59,13 @@ int is_a_city(enum tile_class t);
     returns 1 for grassland, village, town, or castle */
 int is_inhabitable(enum tile_class t);
 
+int is_visible(enum tile_class t);
+
+enum stencil {st_rhombus, st_rect, st_hex};
+
+/* stencil_avlbl_loc_num (st)
+ *  number of available locations for the stencil st */
+int stencil_avlbl_loc_num (enum stencil st);
 
 /* struct tile
  * 
@@ -110,7 +118,9 @@ struct grid {
  */
 void grid_init(struct grid *g, int w, int h);
 
-/* conflict (&g, players, players_num, human_player)
+void apply_stencil(enum stencil st, struct grid *g, int d, struct loc loc[MAX_AVLBL_LOC], int *avlbl_loc_num);
+
+/* conflict (&g, loc_arr, avlbl_loc_num, players, players_num, human_player)
  *
  *  Enhances an already initialized grid.
  *  Places at most 4 players at the corners of the map, gives them a castle and 2 mines nearby.
@@ -127,7 +137,8 @@ void grid_init(struct grid *g, int w, int h);
  *  ineq = inequality from 0 to 4.
  *
  */
-int conflict (struct grid *g, int players[], int players_num, int locations_num, int human_player, int conditions, int ineq);
+int conflict (struct grid *g, struct loc loc_arr[], int available_loc_num,
+    int players[], int players_num, int locations_num, int human_player, int conditions, int ineq);
 
 /* is_conected(&g)
  * Check connectedness of the grid */

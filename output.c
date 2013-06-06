@@ -22,8 +22,8 @@
 #include <string.h>
 
 /* Macros to map tiles location (i,j) to its position on the screen */
-#define POSY(i,j) ((j)+1)
-#define POSX(i,j) ((i)*4 + (j)*2 + 1)
+#define POSY(s,i,j) ((j)+1)
+#define POSX(s,i,j) ((i)*4 + (j)*2 + 1) - (s->xskip*(CELL_STR_LEN+1))
 
 /* Returns a color_pair number for a player p */
 int player_color(int p) {
@@ -49,13 +49,13 @@ int player_style(int p) {
 }
 
 /* Outputs population at the tile (i,j) */
-void output_units(struct tile *t, int i, int j) {
+void output_units(struct state *s, struct tile *t, int i, int j) {
   int p;
   int num = 0;
   for(p=0; p<MAX_PLAYER; ++p) {
     num += t->units[p][citizen];
   }
-  move(POSY(i,j), POSX(i,j));
+  move(POSY(s,i,j), POSX(s,i,j));
   if (num > 400) 
     addstr(":::"); 
   else if (num > 200) 
@@ -93,7 +93,7 @@ void output_grid(struct state *st, int ktime) {
   for (i=0; i<st->grid.width; ++i) {
     for (j=0; j<st->grid.height; ++j) {
 
-      move(POSY(i,j), POSX(i,j)-1);
+      move(POSY(st,i,j), POSX(st,i,j)-1);
       switch (st->grid.tiles[i][j].cl) {
         case mountain: 
           attrset(A_NORMAL | COLOR_PAIR(4));
@@ -102,13 +102,19 @@ void output_grid(struct state *st, int ktime) {
         case mine: 
           attrset(A_NORMAL | COLOR_PAIR(4));
           addstr(" /$\\ "); 
-          move(POSY(i,j), POSX(i,j)+1);
+          move(POSY(st,i,j), POSX(st,i,j)+1);
           if (st->grid.tiles[i][j].pl != NEUTRAL) 
             attrset(A_BOLD | COLOR_PAIR(6));
           else
             attrset(A_NORMAL | COLOR_PAIR(6));
           addstr("$"); 
           break;
+        /*
+        case abyss: 
+          attrset(A_NORMAL | COLOR_PAIR(6));
+          addstr("  %  "); 
+          break;
+         */
         case grassland: 
           attrset(A_NORMAL | COLOR_PAIR(4));
           addstr("  -  "); 
@@ -125,12 +131,13 @@ void output_grid(struct state *st, int ktime) {
           attrset(player_style(st->grid.tiles[i][j].pl));
           addstr(" W#W "); 
           break;
+        default:;
       }
       attrset(A_NORMAL | COLOR_PAIR(1));
      
       if (st->grid.tiles[i][j].cl == grassland) {
         attrset(player_style(st->grid.tiles[i][j].pl));
-        output_units(&st->grid.tiles[i][j], i, j);
+        output_units(st, &st->grid.tiles[i][j], i, j);
         attrset(A_NORMAL | COLOR_PAIR(1));
       }
 
@@ -139,7 +146,7 @@ void output_grid(struct state *st, int ktime) {
         if (p != st->controlled) {
           if (st->fg[p].flag[i][j] != 0 && ((ktime + p) / 5)%10 < 10) {
             attrset(player_style(p));
-            mvaddch(POSY(i,j), POSX(i,j), 'x');
+            mvaddch(POSY(st,i,j), POSX(st,i,j), 'x');
             attrset(A_NORMAL | COLOR_PAIR(1));
           }
         }
@@ -159,13 +166,13 @@ void output_grid(struct state *st, int ktime) {
         }
       }
       if (false && !b){
-        move(POSY(i,j), POSX(i,j)-1);
+        move(POSY(st,i,j), POSX(st,i,j)-1);
         addstr("     "); 
       }
       // player 1 flags
       if (st->fg[st->controlled].flag[i][j] != 0 && (ktime / 5)%10 < 10) {
         attrset(A_BOLD | COLOR_PAIR(1));
-        mvaddch(POSY(i,j), POSX(i,j)+2, 'P');
+        mvaddch(POSY(st,i,j), POSX(st,i,j)+2, 'P');
         attrset(A_NORMAL | COLOR_PAIR(1));
       }
 
@@ -175,24 +182,23 @@ void output_grid(struct state *st, int ktime) {
   i = st->cursor.i;
   j = st->cursor.j;
   attrset(A_BOLD | COLOR_PAIR(1));
-  mvaddch(POSY(i,j), POSX(i,j)-1, '(');
-  mvaddch(POSY(i+1,j), POSX(i+1,j)-1, ')');
+  mvaddch(POSY(st,i,j), POSX(st,i,j)-1, '(');
+  mvaddch(POSY(st,i+1,j), POSX(st,i+1,j)-1, ')');
   attrset(A_NORMAL | COLOR_PAIR(1));
 
   /* print populations at the cursor */
   int p;
   char buf[32];
-  int y = POSY(0, st->grid.height) + 1;
-  mvaddstr(y, 0, " Population at the cursor:");
-  mvaddstr(y-4, 0, " Gold:");
+  int y = POSY(st,0, st->grid.height) + 1;
+  mvaddstr(y, 0, " Gold:");
   sprintf(buf, "%li    ", st->country[st->controlled].gold);
   attrset(player_style(st->controlled));
-  mvaddstr(y-4, 8, buf);
-  mvaddstr(y-4, 8, buf);
+  mvaddstr(y, 8, buf);
+  mvaddstr(y, 8, buf);
   attrset(A_NORMAL | COLOR_PAIR(1));
-  mvaddstr(y-3, 0, " Prices: 150, 300, 600.");
+  mvaddstr(y+1, 0, " Prices: 150, 300, 600.");
   
-  move(y-2, 1);
+  move(y+2, 1);
   addstr("Speed: ");
   attrset(player_style(st->controlled));
   switch(st->speed){
@@ -211,21 +217,22 @@ void output_grid(struct state *st, int ktime) {
   int text_style = A_NORMAL | COLOR_PAIR(1);
   int key_style = player_style(st->controlled);
   
-  output_key (y+3, 1, "Space", key_style, "add/remove a flag", text_style);
-  output_key (y+4, 1, "R or V", key_style, "build", text_style);
+  output_key (y+4, 1, "Space", key_style, "add/remove a flag", text_style);
+  output_key (y+5, 1, "R or V", key_style, "build", text_style);
   
-  output_key (y+3, 30, "X", key_style, "remove all flags", text_style);
-  output_key (y+4, 30, "C", key_style, "remove 50\% of flags", text_style);
+  output_key (y+4, 30, "X", key_style, "remove all flags", text_style);
+  output_key (y+5, 30, "C", key_style, "remove 50\% of flags", text_style);
   
-  output_key (y+4, 57, "S", key_style, "slow down", text_style);
-  output_key (y+3, 57, "F", key_style, "speed up", text_style);
-  output_key (y+5, 57, "P", key_style, "pause", text_style);
+  output_key (y+5, 57, "S", key_style, "slow down", text_style);
+  output_key (y+4, 57, "F", key_style, "speed up", text_style);
+  output_key (y+6, 57, "P", key_style, "pause", text_style);
   
+  mvaddstr(y+1, 30, " Population at the cursor:");
   for(p=0; p<MAX_PLAYER; ++p) {
     if (p == NEUTRAL) continue;
     attrset(player_style(p));
     sprintf(buf, "%3i", st->grid.tiles[i][j].units[p][citizen]);
-    mvaddstr(y, 30 + p*5, buf);
+    mvaddstr(y+2, 30 + p*5, buf);
     /*
     sprintf(buf, "%10li", st->country[p].gold);
     mvaddstr(y+2, 10 + p*12, buf);

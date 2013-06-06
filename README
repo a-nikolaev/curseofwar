@@ -42,14 +42,17 @@ Command line arguments
   -H height
     Map height (default is 21)
 
-  -l [2|3|4]
-    Set the number of countries (default is 4).
+  -S [rhombus|rect|hex]
+    Map shape. It also sets N=4 for rhombus and rectangle, and N=6 for the hexagon.
+
+  -l [2|3| ... N]
+    Set the number of countries (default is N).
 
   -i [0|1|2|3|4]
     Inequality between the countries (0 is the lowest, 4 in the highest).
 
-  -q [1|2|3|4]
-    Choose player's location by its quality (1 = the best available on the map, 4 = the worst).
+  -q [1|2| ... N]
+    Choose player's location by its quality (1 = the best available on the map, N = the worst).
 
   -r
     Absolutely random initial conditions, overrides options -l, -i, and -q.
@@ -68,6 +71,12 @@ Command line arguments
 
 How to play
 ===========
+
+  A good and easy mode to start playing:
+    $ curseofwar -i4 -q1 -dee
+
+  Or, on a smaller map:
+    $ curseofwar -i4 -q1 -dee -W16 -H16
 
   Normally, the game starts with 4 small countries in the corners of the map. 
   You start as the ruler of the Green country, and your goal is to conquer 

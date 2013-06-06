@@ -76,12 +76,14 @@ void print_help() {
     "\tMap width (default is 21)\n\n"
     "-H height\n"
     "\tMap height (default is 21)\n\n"
-    "-l [2|3|4]\n"
-    "\tSet the number of countries (default is 4).\n\n"
+    "-S [rhombus|rect|hex]\n"
+    "\tMap shape. It also sets N=4 for rhombus and rectangle, and N=6 for the hexagon.\n\n"
+    "-l [2|3| ... N]\n"
+    "\tSet the number of countries (default is N).\n\n"
     "-i [0|1|2|3|4]\n"
     "\tInequality between the countries (0 is the lowest, 4 in the highest).\n\n"
-    "-q [1|2|3|4]\n"
-    "\tChoose player's location by its quality (1 = the best available on the map, 4 = the worst).\n\n"
+    "-q [1|2| ... N]\n"
+    "\tChoose player's location by its quality (1 = the best available on the map, N = the worst).\n\n"
     "-r\n"
     "\tAbsolutely random initial conditions, overrides options -l, -i, and -q.\n\n"
     "-d [ee|e|n|h|hh]\n"
@@ -93,6 +95,40 @@ void print_help() {
     "-h\n"
     "\tDisplay this help \n\n"
   );
+}
+
+void win_or_lose(struct state *st, int k) {
+  int i, j, p;
+  int pop[MAX_PLAYER];
+  for (p=0; p<MAX_PLAYER; ++p) pop[p] = 0;
+
+  for(i=0; i<st->grid.width; ++i){
+    for(j=0; j<st->grid.height; ++j){
+      if(is_inhabitable(st->grid.tiles[i][j].cl)) {
+        for(p=0; p<MAX_PLAYER; ++p){
+          pop[p] += st->grid.tiles[i][j].units[p][citizen];
+        }
+      }
+    }
+  }
+
+  int win = 1;
+  int lose = 0;
+  int best = 0;
+  for(p=0; p<MAX_PLAYER; ++p){
+    if(pop[best] < pop[p]) best = p;
+    if(p!=st->controlled && pop[p]>0) win = 0;
+  }
+  if(pop[st->controlled] == 0) lose = 1;
+
+  if (win) {
+    attrset(A_BOLD | COLOR_PAIR(4));
+    mvaddstr(2 + st->grid.height, 31, "You are victorious!");
+  }
+  else if (lose) {
+    attrset(A_BOLD | COLOR_PAIR(2));
+    mvaddstr(2 + st->grid.height, 31, "You are defeated!");
+  }
 }
 
 /* Run the game */
@@ -122,6 +158,8 @@ void run (struct state *st) {
       }
       output_grid(st, k);
       time_to_redraw = 0;
+
+      if (k%100 == 0) win_or_lose(st, k);
     }
     if ( input_ready ) {
       input_ready = 0;
@@ -145,14 +183,15 @@ int main(int argc, char* argv[]){
   int sp_val = sp_normal; // speed
   int w_val = 21; // width
   int h_val = 21; // height
-  int l_val = 4;  // the number of starting locations
+  int l_val = 0;  // the number of starting locations
   unsigned int seed_val = rand();
   int conditions_val = 0;
   int ineq_val = RANDOM_INEQUALITY;
+  enum stencil shape_val = st_rhombus;
 
 	opterr = 0;
   int c;
-	while ((c = getopt (argc, argv, "hrW:H:i:l:q:d:s:R:")) != -1){
+	while ((c = getopt (argc, argv, "hrW:H:i:l:q:d:s:R:S:")) != -1){
 		switch(c){
 			case 'r': r_flag = 1; break;
 			//case 'f': f_val = optarg; break;
@@ -181,7 +220,7 @@ int main(int argc, char* argv[]){
 								};
 								break;
 			case 'l': { char* endptr = NULL;
-									l_val = IN_SEGMENT(strtol(optarg, &endptr, 10), 2, 4);
+									l_val = strtol(optarg, &endptr, 10);
 									if (*endptr != '\0') {
                     print_help();
 										return 1;
@@ -190,7 +229,7 @@ int main(int argc, char* argv[]){
 								break;
 			case 'q': { char* endptr = NULL;
 									conditions_val = strtol(optarg, &endptr, 10);
-									if (*endptr != '\0' || conditions_val < 1 || conditions_val > 4) {
+									if (*endptr != '\0') {
                     print_help();
 										return 1;
 									}
@@ -231,12 +270,33 @@ int main(int argc, char* argv[]){
                   return 1;
                 }
                 break;
+      case 'S': if (strcmp(optarg, "rhombus") == 0) shape_val = st_rhombus;
+                else if (strcmp(optarg, "rect") == 0) shape_val = st_rect;
+                else if (strcmp(optarg, "hex") == 0) shape_val = st_hex;
+                else {
+                  print_help();
+                  return 1;
+                }
+                break;
       case '?': case 'h':
           print_help();
 					return 1;
 			default: abort ();
 		}
 	}
+  /* Adjust l_val and conditions_val */
+  {
+    int avlbl_loc_num = stencil_avlbl_loc_num (shape_val);
+    if(l_val == 0) l_val = avlbl_loc_num;
+
+	  l_val = IN_SEGMENT(l_val, 2, avlbl_loc_num);
+    conditions_val = IN_SEGMENT(conditions_val, 1, avlbl_loc_num);
+
+    if (shape_val == st_rect) {
+      w_val = MIN(MAX_WIDTH-1, w_val+(h_val+1)/2);
+    }
+  }
+
   
   struct sigaction newhandler;            /* new settings         */
   sigset_t         blocked;               /* set of blocked sigs  */
@@ -298,9 +358,14 @@ int main(int argc, char* argv[]){
   input_ready = 0;
   time_to_redraw = 1;
 
+  attrset(A_BOLD | COLOR_PAIR(2));
+  mvaddstr(0,0,"Map is generated. Please wait.");
+  refresh();
 
   struct state st;
-  state_init(&st, w_val, h_val, seed_val, r_flag, l_val, conditions_val, ineq_val, sp_val, dif_val);
+  state_init(&st, w_val, h_val, shape_val, seed_val, r_flag, l_val, conditions_val, ineq_val, sp_val, dif_val);
+  
+  clear();
 
   /* initialize aio buffer for the first read and place call */
   setup_aio_buffer(&kbcbuf);                         
@@ -357,6 +422,8 @@ int update_from_input( struct state *st )
         /* get number of chars read  */
         if ( aio_return(&kbcbuf) == 1 ) {
             c = *cp;
+            int cursi = st->cursor.i;
+            int cursj = st->cursor.j;
             /*ndelay = 0; */
             switch (c) {
                 case 'Q':
@@ -380,20 +447,20 @@ int update_from_input( struct state *st )
                     }
                     break;
                 case 'h': case K_LEFT:
-                  st->cursor.i--;
+                  cursi--;
                   break;
                 case 'l': case K_RIGHT:
-                  st->cursor.i++;
+                  cursi++;
                   break;
                 case 'k': case K_UP:
-                  st->cursor.j--;
-                  if (st->cursor.j % 2 == 1)
-                    st->cursor.i++;
+                  cursj--;
+                  if (cursj % 2 == 1)
+                    cursi++;
                   break;
                 case 'j': case K_DOWN:
-                  st->cursor.j++;
-                  if (st->cursor.j % 2 == 0)
-                    st->cursor.i--;
+                  cursj++;
+                  if (cursj % 2 == 0)
+                    cursi--;
                   break;
                 case ' ':
                   if (st->fg[st->controlled].flag[st->cursor.i][st->cursor.j] == 0)
@@ -417,8 +484,12 @@ int update_from_input( struct state *st )
                   break;
                 }
             
-            st->cursor.i = IN_SEGMENT(st->cursor.i, 0, st->grid.width-1);
-            st->cursor.j = IN_SEGMENT(st->cursor.j, 0, st->grid.height-1);
+            cursi = IN_SEGMENT(cursi, 0, st->grid.width-1);
+            cursj = IN_SEGMENT(cursj, 0, st->grid.height-1);
+            if ( is_visible(st->grid.tiles[cursi][cursj].cl) ) {
+              st->cursor.i = cursi;
+              st->cursor.j = cursj;
+            }
 
         }                
     /* place a new request  */

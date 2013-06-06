@@ -45,7 +45,8 @@ enum config_speed slower(enum config_speed sp){
   }
 }
 
-void state_init(struct state *s, int w, int h, unsigned int map_seed, int keep_random, int locations_num, 
+void state_init(struct state *s, int w, int h, enum stencil shape,
+    unsigned int map_seed, int keep_random, int locations_num, 
     int conditions, int inequality, enum config_speed speed, enum config_dif dif){
   
   s->speed = speed;
@@ -69,10 +70,30 @@ void state_init(struct state *s, int w, int h, unsigned int map_seed, int keep_r
     int conflict_code = 0;
     do {
       grid_init(&s->grid, w, h);
+  
+      /* starting locations arrays */
+      struct loc loc_arr[MAX_AVLBL_LOC];
+      int available_loc_num = 0;
+      int d = 2;
+      apply_stencil(shape, &s->grid, d, loc_arr, &available_loc_num);
+     
+      /* find the leftmost visible tile */
+      int i, j;
+      s->xskip = 10000; 
+      for(i=0; i<s->grid.width; ++i)
+        for(j=0; j<s->grid.height; ++j)
+          if(is_visible(s->grid.tiles[i][j].cl)) {
+            int x = i*2 + j;
+            if (s->xskip > x)
+              s->xskip = x;
+          }
+      s->xskip = s->xskip/2;
 
+      /* conflict mode */
       conflict_code = 0;
       if (!keep_random) 
-        conflict_code = conflict(&s->grid, players, 6, locations_num, s->controlled, s->conditions, s->inequality);
+        conflict_code = conflict(&s->grid, loc_arr, available_loc_num, 
+            players, 6, locations_num, s->controlled, s->conditions, s->inequality);
     } while(conflict_code != 0 || !is_connected(&s->grid));
   }
   /* Map is ready */
@@ -85,8 +106,8 @@ void state_init(struct state *s, int w, int h, unsigned int map_seed, int keep_r
   
   
   /* cursor location */
-  s->cursor.i = 0;
-  s->cursor.j = 0;
+  s->cursor.i = s->grid.width/2;
+  s->cursor.j = s->grid.height/2;
   int i, j;
   for (i=0; i<s->grid.width; ++i) {
     for (j=0; j<s->grid.height; ++j) {
