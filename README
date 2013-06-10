@@ -29,10 +29,10 @@ Build:
   $ make
 
 Install:
-  $ make install
+  # make install
 
 Uninstall:
-  $ make uninstall
+  # make uninstall
 
 Command line arguments
 ======================
@@ -46,13 +46,13 @@ Command line arguments
     Map shape. It also sets N=4 for rhombus and rectangle, and N=6 for the hexagon.
 
   -l [2|3| ... N]
-    Set the number of countries (default is N).
+    Sets L, the number of countries (default is N).
 
   -i [0|1|2|3|4]
     Inequality between the countries (0 is the lowest, 4 in the highest).
 
-  -q [1|2| ... N]
-    Choose player's location by its quality (1 = the best available on the map, N = the worst).
+  -q [1|2| ... L]
+    Choose player's location by its quality (1 = the best available on the map, L = the worst).
 
   -r
     Absolutely random initial conditions, overrides options -l, -i, and -q.

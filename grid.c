@@ -250,6 +250,7 @@ void eval_locations (struct grid *g, struct loc loc[], int result[], int len){
       if (g->tiles[i][j].cl == mine) {
         int single_owner = unreachable;
         int max_dist = 0;
+        int min_dist = MAX_WIDTH * MAX_HEIGHT + 1;
         for (k = 0; k<DIRECTIONS; ++k) {
           x = i + dirs[k].i;
           y = j + dirs[k].j;
@@ -263,14 +264,18 @@ void eval_locations (struct grid *g, struct loc loc[], int result[], int len){
           if (single_owner == unreachable) {
             single_owner = u[x][y];
             max_dist = d[x][y];
+            min_dist = d[x][y];
           }
           else {
-            if (u[x][y] == single_owner) max_dist = MAX(max_dist, d[x][y]);
+            if (u[x][y] == single_owner) {
+              max_dist = MAX(max_dist, d[x][y]);
+              min_dist = MIN(min_dist, d[x][y]);
+            }
             else if (u[x][y] != unreachable) single_owner = competition;
           }
         }
         if (single_owner != competition && single_owner != unreachable)
-          result[single_owner] += (int) ( (float)(MAX_WIDTH + MAX_HEIGHT) * exp(-0.5 * (float)max_dist*max_dist / (MAX_WIDTH*MAX_HEIGHT)) );
+          result[single_owner] += (int) ( 100.0 * (MAX_WIDTH + MAX_HEIGHT) * exp(-10.0 * (float)max_dist*min_dist / (MAX_WIDTH*MAX_HEIGHT)) );
       }
     }
   return;
@@ -324,63 +329,24 @@ int conflict (struct grid *g, struct loc loc_arr[], int available_loc_num,
 
   locations_num = IN_SEGMENT(locations_num, 2, available_loc_num);
   
-  /* eval locations */
-  int eval_result[] = {0, 0, 0, 0, 0, 0, 0};
-  int loc_index[] = {0, 1, 2, 3, 4, 5, 6};
-  /* put grassland at starting locations */
-  for(i=0; i<available_loc_num; ++i)
-    g->tiles[loc_arr[i].i][loc_arr[i].j].cl = grassland;
-  eval_locations(g, loc_arr, eval_result, available_loc_num);
-  sort(eval_result, loc_index, available_loc_num);
-
-  /* Compute inequality */
-  if (ineq != RANDOM_INEQUALITY)
-  {
-    float avg = 0;
-    for(i=0; i<available_loc_num; ++i) avg += eval_result[i];
-    avg = avg / (float)available_loc_num;
-    float var = 0;
-    for(i=0; i<available_loc_num; ++i) 
-      var += pow(eval_result[i] - avg, 2);
-    var = var / (float)available_loc_num; // population variance
-
-    int diff = sqrt(var);
-    int x = diff * 100 / avg;
-    if ( (x < 20*ineq && ineq>0) || (x > 20*(ineq+1) && ineq<4) ) return -1;
-  }
-
   int num = MIN(locations_num, players_num);
- 
-  /* a shuffled copy of the players array */
-  int *sh_players = malloc(sizeof(int)*players_num);
-  for(i=0; i<players_num; ++i)
-    sh_players[i] = players[i];
-  shuffle(sh_players, players_num);
 
   /* shift in the positions arrays */
-  /* choose at random */
   int di = rand() % available_loc_num;
-  int ihuman = rand() % num;
-  /* choose specific conditions {1,... N}, 1==best, N==worst */
-  if (conditions > 0) {
-    ihuman = rand() % num;
-    int select = IN_SEGMENT(available_loc_num - conditions, 0, available_loc_num-1);
-    di = (loc_index[select] - ihuman + available_loc_num) % available_loc_num;
-  }
+
+  struct loc chosen_loc [MAX_AVLBL_LOC];
   
   i = 0;
   while (i < num) {
     int ii = (i + di + available_loc_num) % available_loc_num;
     int x = loc_arr[ii].i;
     int y = loc_arr[ii].j;
+
+    chosen_loc[i].i = x;
+    chosen_loc[i].j = y;
+
     g->tiles[x][y].cl = castle;
-    if (human_player != NEUTRAL && ihuman == i) 
-      g->tiles[x][y].pl = human_player;
-    else 
-      g->tiles[x][y].pl = sh_players[i];
-    
-    g->tiles[x][y].units[ g->tiles[x][y].pl ][citizen] = 10;
-    
+
     /* place mines nearby */
     int dir = rand() % DIRECTIONS;
     int ri = dirs[dir].i;
@@ -395,7 +361,69 @@ int conflict (struct grid *g, struct loc loc_arr[], int available_loc_num,
     mine_j = y - 2*m*rj;
     g->tiles[mine_i][mine_j].cl = mine;
     g->tiles[mine_i][mine_j].pl = NEUTRAL;
+    mine_i = x - m*ri;
+    mine_j = y - m*rj;
+    g->tiles[mine_i][mine_j].cl = grassland;
+    g->tiles[mine_i][mine_j].pl = NEUTRAL;
 
+    i++;
+  }
+ 
+  /* eval locations */
+  int eval_result[] = {0, 0, 0, 0, 0, 0, 0};
+  int loc_index[] = {0, 1, 2, 3, 4, 5, 6};
+  eval_locations(g, chosen_loc, eval_result, num);
+  /* sort in increasing order */
+  sort(eval_result, loc_index, num);
+
+  /* Compute inequality */
+  if (ineq != RANDOM_INEQUALITY)
+  {
+    float avg = 0;
+    for(i=0; i<num; ++i) avg += eval_result[i];
+    avg = avg / (float)num;
+    float var = 0;
+    for(i=0; i<num; ++i) 
+      var += pow((float)eval_result[i] - avg, 2);
+    var = var / (float)num; // population variance
+
+    float diff = sqrt(var);
+    float x = diff * 1000.0 / avg;
+    switch (ineq) {
+      case 0: if (x>50) return -1; break;
+      case 1: if (x<=50 || x>100) return -1; break;
+      case 2: if (x<=100 || x>250) return -1; break;
+      case 3: if (x<=250 || x>500) return -1; break;
+      case 4: if (x<=500) return -1; break;
+    }
+  }
+  
+  /* a shuffled copy of the players array */
+  int *sh_players = malloc(sizeof(int)*players_num);
+  for(i=0; i<players_num; ++i)
+    sh_players[i] = players[i];
+  shuffle(sh_players, players_num);
+  
+  /* human player index */
+  int ihuman = rand() % num;
+  /* choose specific conditions {1,... N}, 1==best, N==worst */
+  if (conditions > 0) {
+    int select = IN_SEGMENT(num - conditions, 0, num-1);
+    ihuman = loc_index[select];
+  }
+
+  i = 0;
+  while (i < num) {
+    int ii = loc_index[i];
+    int x = chosen_loc[ ii ].i;
+    int y = chosen_loc[ ii ].j;
+    if (human_player != NEUTRAL && ihuman == ii) 
+      g->tiles[x][y].pl = human_player;
+    else 
+      g->tiles[x][y].pl = sh_players[i];
+    
+    g->tiles[x][y].units[ g->tiles[x][y].pl ][citizen] = 10;
+    
     i++;
   }
 

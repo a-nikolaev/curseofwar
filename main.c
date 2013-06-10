@@ -79,11 +79,11 @@ void print_help() {
     "-S [rhombus|rect|hex]\n"
     "\tMap shape. It also sets N=4 for rhombus and rectangle, and N=6 for the hexagon.\n\n"
     "-l [2|3| ... N]\n"
-    "\tSet the number of countries (default is N).\n\n"
+    "\tSets L, the number of countries (default is N).\n\n"
     "-i [0|1|2|3|4]\n"
     "\tInequality between the countries (0 is the lowest, 4 in the highest).\n\n"
-    "-q [1|2| ... N]\n"
-    "\tChoose player's location by its quality (1 = the best available on the map, N = the worst).\n\n"
+    "-q [1|2| ... L]\n"
+    "\tChoose player's location by its quality (1 = the best available on the map, L = the worst).\n\n"
     "-r\n"
     "\tAbsolutely random initial conditions, overrides options -l, -i, and -q.\n\n"
     "-d [ee|e|n|h|hh]\n"
@@ -186,6 +186,8 @@ int main(int argc, char* argv[]){
   int l_val = 0;  // the number of starting locations
   unsigned int seed_val = rand();
   int conditions_val = 0;
+  int conditions_were_set = 0;
+
   int ineq_val = RANDOM_INEQUALITY;
   enum stencil shape_val = st_rhombus;
 
@@ -229,6 +231,7 @@ int main(int argc, char* argv[]){
 								break;
 			case 'q': { char* endptr = NULL;
 									conditions_val = strtol(optarg, &endptr, 10);
+                  conditions_were_set = 1;
 									if (*endptr != '\0') {
                     print_help();
 										return 1;
@@ -289,8 +292,19 @@ int main(int argc, char* argv[]){
     int avlbl_loc_num = stencil_avlbl_loc_num (shape_val);
     if(l_val == 0) l_val = avlbl_loc_num;
 
+    if (l_val < 2 || l_val > avlbl_loc_num) {
+      print_help();
+      return 1;
+    }
+    if (conditions_were_set && (conditions_val<1 || conditions_val>l_val)) {
+      print_help();
+      return 1;
+    }
+
+    /*
 	  l_val = IN_SEGMENT(l_val, 2, avlbl_loc_num);
     conditions_val = IN_SEGMENT(conditions_val, 1, avlbl_loc_num);
+    */
 
     if (shape_val == st_rect) {
       w_val = MIN(MAX_WIDTH-1, w_val+(h_val+1)/2);

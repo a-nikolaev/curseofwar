@@ -61,6 +61,7 @@ void state_init(struct state *s, int w, int h, enum stencil shape,
   //int players[] = {7, 2, 3, 5};
   //int players[] = {3, 4, 4, 6};
   int players[] = {2, 3, 4, 5, 6, 7};
+  int players_arr_len = 6;
   
   /* Initialize map generation with the map_seed */
   srand(s->map_seed);
@@ -79,7 +80,7 @@ void state_init(struct state *s, int w, int h, enum stencil shape,
      
       /* find the leftmost visible tile */
       int i, j;
-      s->xskip = 10000; 
+      s->xskip = MAX_WIDTH * 2 + 1; 
       for(i=0; i<s->grid.width; ++i)
         for(j=0; j<s->grid.height; ++j)
           if(is_visible(s->grid.tiles[i][j].cl)) {
@@ -93,7 +94,7 @@ void state_init(struct state *s, int w, int h, enum stencil shape,
       conflict_code = 0;
       if (!keep_random) 
         conflict_code = conflict(&s->grid, loc_arr, available_loc_num, 
-            players, 6, locations_num, s->controlled, s->conditions, s->inequality);
+            players, players_arr_len, locations_num, s->controlled, s->conditions, s->inequality);
     } while(conflict_code != 0 || !is_connected(&s->grid));
   }
   /* Map is ready */
@@ -103,7 +104,6 @@ void state_init(struct state *s, int w, int h, enum stencil shape,
     flag_grid_init(&s->fg[p], w, h);
     s->country[p].gold = 0;
   }
-  
   
   /* cursor location */
   s->cursor.i = s->grid.width/2;
