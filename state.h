@@ -34,6 +34,11 @@ enum config_speed faster(enum config_speed);
     returns a slower speed */
 enum config_speed slower(enum config_speed);
 
+struct ui {
+  struct loc cursor;
+  int xskip;
+};
+
 /*
   struct state
     
@@ -41,7 +46,6 @@ enum config_speed slower(enum config_speed);
 
     Members:
       grid in sthe map grid
-      cursor is the cursor location
       flag_grid[] is the array of flag grids (different for each player)
       country[] is the array of countries
       
@@ -58,12 +62,14 @@ enum config_speed slower(enum config_speed);
  */
 struct state {
   struct grid grid;
-  struct loc cursor;
+  /* struct loc cursor; */
   struct flag_grid fg [MAX_PLAYER];
   struct king king [MAX_PLAYER];
   int kings_num;
 
   struct country country [MAX_PLAYER];
+
+  unsigned long time;
 
   int map_seed;
 
@@ -71,8 +77,6 @@ struct state {
 
   int conditions;
   int inequality;
-
-  int xskip;
 
   enum config_speed speed;
   enum config_speed prev_speed;
@@ -92,8 +96,11 @@ struct state {
       function conflict() is used to generate this game mode
  */
 void state_init(struct state *s, int w, int h, enum stencil shape,
-    unsigned int map_seed, int keep_random, int locations_num, 
+    unsigned int map_seed, int keep_random, int locations_num, int clients_num,
     int conditions, int inequality, enum config_speed speed, enum config_dif dif);
+
+/* compute the cursor location, and xskip */
+void ui_init(struct state *s, struct ui *ui);
 
 /* 
   kings_move(&s)

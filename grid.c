@@ -309,7 +309,8 @@ void sort (int val[], int item[], int len) {
 }
 
 int conflict (struct grid *g, struct loc loc_arr[], int available_loc_num,
-    int players[], int players_num, int locations_num, int human_player, int conditions, int ineq) 
+    int players[], int players_num, int locations_num, int ui_players[], int ui_players_num,
+    int conditions, int ineq) 
 {
   int i, j, p, c;
   /* first, remove all cities */
@@ -329,7 +330,7 @@ int conflict (struct grid *g, struct loc loc_arr[], int available_loc_num,
 
   locations_num = IN_SEGMENT(locations_num, 2, available_loc_num);
   
-  int num = MIN(locations_num, players_num);
+  int num = MIN(locations_num, players_num + ui_players_num);
 
   /* shift in the positions arrays */
   int di = rand() % available_loc_num;
@@ -398,11 +399,20 @@ int conflict (struct grid *g, struct loc loc_arr[], int available_loc_num,
     }
   }
   
-  /* a shuffled copy of the players array */
-  int *sh_players = malloc(sizeof(int)*players_num);
+  /* suffled computer players */
+  int *sh_players_comp = malloc(sizeof(int)*players_num);
   for(i=0; i<players_num; ++i)
-    sh_players[i] = players[i];
-  shuffle(sh_players, players_num);
+    sh_players_comp[i] = players[i];
+  shuffle(sh_players_comp, players_num);
+
+  /* a shuffled copy of the players array */
+  int *sh_players = malloc(sizeof(int)*num);
+  for(i=0; i<ui_players_num; ++i)
+    sh_players[i] = ui_players[i];
+  int dplayer = rand() % players_num;
+  for(; i<num; ++i)
+    sh_players[i] = sh_players_comp[(i-ui_players_num + dplayer) % players_num];
+  shuffle(sh_players, num);
   
   /* human player index */
   int ihuman = rand() % num;
@@ -417,11 +427,21 @@ int conflict (struct grid *g, struct loc loc_arr[], int available_loc_num,
     int ii = loc_index[i];
     int x = chosen_loc[ ii ].i;
     int y = chosen_loc[ ii ].j;
+    /*
     if (human_player != NEUTRAL && ihuman == ii) 
       g->tiles[x][y].pl = human_player;
     else 
       g->tiles[x][y].pl = sh_players[i];
-    
+    */
+    if (ui_players_num > 1) {
+      g->tiles[x][y].pl = sh_players[i];
+    }
+    else {
+      if (ii == ihuman)
+        g->tiles[x][y].pl = ui_players[0];
+      else 
+        g->tiles[x][y].pl = sh_players_comp[i];
+    }
     g->tiles[x][y].units[ g->tiles[x][y].pl ][citizen] = 10;
     
     i++;

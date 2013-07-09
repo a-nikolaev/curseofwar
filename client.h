@@ -17,33 +17,18 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  
 ******************************************************************************/
+#ifndef _CLIENT_H
+#define _CLIENT_H
 
-#ifndef _COMMON_H
-#define _COMMON_H
+#include "network.h"
+#include "messaging.h"
+#include "state.h"
 
-#define MAX_PLAYER 8  // number of players (countries)
-#define NEUTRAL 0     // neutral player
-#define MAX_CLASS 1   // classes of units. only one exists.
-#define MAX_WIDTH 40  // max map width
-#define MAX_HEIGHT 29 // max map height
-#define DIRECTIONS 6  // number of neighbors on the grid
+int client_process_input (struct state *st, struct ui *ui, char c, int sfd, struct addrinfo *srv_addr);
+int client_process_msg_s_state (struct state *st, struct msg_s_data *msg);
 
-#define MAX_POP 499   // maximum polulation at a tile (for each player)
+int client_receive_msg_s (int sfd, struct state *st);
 
-#define MIN(x,y) (x<y)?(x):(y)
-#define MAX(x,y) (x<y)?(y):(x)
-#define IN_SEGMENT(x,l,r) (((x)<(l))?(l) : ( ((x)>(r))?(r):(x) ))
-
-#define ESCAPE     '\033'
-#define K_UP       65
-#define K_DOWN     66
-#define K_RIGHT    67
-#define K_LEFT     68
-
-/* game speed */
-enum config_speed {sp_pause, sp_slowest, sp_slower, sp_slow, sp_normal, sp_fast, sp_faster, sp_fastest};
-
-/* game difficulty */
-enum config_dif {dif_easiest, dif_easy, dif_normal, dif_hard, dif_hardest};
+void send_msg_c (int sfd, struct addrinfo *srv_addr, uint8_t msg, uint8_t i, uint8_t j, uint8_t info);
 
 #endif

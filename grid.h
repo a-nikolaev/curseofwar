@@ -49,7 +49,7 @@ enum unit_class { citizen=0 };
  *    (castles have the highest rate, while villages have the lowest).
  *
  * */
-enum tile_class { abyss, mountain, mine, grassland, village, town, castle };
+enum tile_class { abyss=0, mountain=1, mine=2, grassland=3, village=4, town=5, castle=6 };
 
 /* is_a_city(t)
     returns 1 for village, town, or castle */
@@ -138,7 +138,8 @@ void apply_stencil(enum stencil st, struct grid *g, int d, struct loc loc[MAX_AV
  *
  */
 int conflict (struct grid *g, struct loc loc_arr[], int available_loc_num,
-    int players[], int players_num, int locations_num, int human_player, int conditions, int ineq);
+    int players[], int players_num, int locations_num, int ui_players[], int ui_players_num,
+    int conditions, int ineq);
 
 /* is_conected(&g)
  * Check connectedness of the grid */

@@ -17,33 +17,36 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  
 ******************************************************************************/
+#ifndef _SERVER_H
+#define _SERVER_H
 
-#ifndef _COMMON_H
-#define _COMMON_H
+/*
+#include <sys/socket.h>
+*/
+#include <netinet/in.h>
+#include "network.h"
+#include "common.h"
+#include "state.h"
 
-#define MAX_PLAYER 8  // number of players (countries)
-#define NEUTRAL 0     // neutral player
-#define MAX_CLASS 1   // classes of units. only one exists.
-#define MAX_WIDTH 40  // max map width
-#define MAX_HEIGHT 29 // max map height
-#define DIRECTIONS 6  // number of neighbors on the grid
+#define MAX_CLIENT MAX_PLAYER
 
-#define MAX_POP 499   // maximum polulation at a tile (for each player)
+struct client_record {
+  int pl;
+  int id;
+  char* name;
+  struct sockaddr_storage sa;
+};
 
-#define MIN(x,y) (x<y)?(x):(y)
-#define MAX(x,y) (x<y)?(y):(x)
-#define IN_SEGMENT(x,l,r) (((x)<(l))?(l) : ( ((x)>(r))?(r):(x) ))
+/* multiplayer modes: 
+    multi_lobby = waiting for clients, 
+    multi_play = playing, 
+ */
+enum server_mode {server_mode_lobby, server_mode_play};
 
-#define ESCAPE     '\033'
-#define K_UP       65
-#define K_DOWN     66
-#define K_RIGHT    67
-#define K_LEFT     68
+void server_send_msg_s_state (int sfd, struct client_record cl[], int cl_num, struct state *st);
 
-/* game speed */
-enum config_speed {sp_pause, sp_slowest, sp_slower, sp_slow, sp_normal, sp_fast, sp_faster, sp_fastest};
+int server_process_msg_c (uint8_t buf[MSG_BUF_SIZE], int nread, struct state *st, int pl);
 
-/* game difficulty */
-enum config_dif {dif_easiest, dif_easy, dif_normal, dif_hard, dif_hardest};
+int server_get_msg (uint8_t buf[MSG_BUF_SIZE], int nread);
 
 #endif

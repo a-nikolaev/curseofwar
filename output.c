@@ -22,18 +22,18 @@
 #include <string.h>
 
 /* Macros to map tiles location (i,j) to its position on the screen */
-#define POSY(s,i,j) ((j)+1)
-#define POSX(s,i,j) ((i)*4 + (j)*2 + 1) - (s->xskip*(CELL_STR_LEN+1))
+#define POSY(ui,i,j) ((j)+1)
+#define POSX(ui,i,j) ((i)*4 + (j)*2 + 1) - (ui->xskip*(CELL_STR_LEN+1))
 
 /* Returns a color_pair number for a player p */
 int player_color(int p) {
   switch(p) {
     case 0: return 6; // Neutral 
     case 1: return 4; // Green (player)
-    case 2: return 7; // Magenta
+    case 2: return 5; // Blue
     case 3: return 3; // Red
     case 4: return 6; // Yellow
-    case 5: return 5; // Blue
+    case 5: return 7; // Magenta
     case 6: return 8; // Cyan
     case 7: return 2; // Black
     default: return -1;
@@ -49,13 +49,13 @@ int player_style(int p) {
 }
 
 /* Outputs population at the tile (i,j) */
-void output_units(struct state *s, struct tile *t, int i, int j) {
+void output_units(struct ui *ui, struct tile *t, int i, int j) {
   int p;
   int num = 0;
   for(p=0; p<MAX_PLAYER; ++p) {
     num += t->units[p][citizen];
   }
-  move(POSY(s,i,j), POSX(s,i,j));
+  move(POSY(ui,i,j), POSX(ui,i,j));
   if (num > 400) 
     addstr(":::"); 
   else if (num > 200) 
@@ -88,12 +88,12 @@ void output_key (int y, int x, char *key, int key_style, char *s, int s_style) {
 }
 
 /* the main output function */
-void output_grid(struct state *st, int ktime) {
+void output_grid(struct state *st, struct ui *ui, int ktime) {
   int i, j;
   for (i=0; i<st->grid.width; ++i) {
     for (j=0; j<st->grid.height; ++j) {
 
-      move(POSY(st,i,j), POSX(st,i,j)-1);
+      move(POSY(ui,i,j), POSX(ui,i,j)-1);
       switch (st->grid.tiles[i][j].cl) {
         case mountain: 
           attrset(A_NORMAL | COLOR_PAIR(4));
@@ -102,7 +102,7 @@ void output_grid(struct state *st, int ktime) {
         case mine: 
           attrset(A_NORMAL | COLOR_PAIR(4));
           addstr(" /$\\ "); 
-          move(POSY(st,i,j), POSX(st,i,j)+1);
+          move(POSY(ui,i,j), POSX(ui,i,j)+1);
           if (st->grid.tiles[i][j].pl != NEUTRAL) 
             attrset(A_BOLD | COLOR_PAIR(6));
           else
@@ -137,7 +137,7 @@ void output_grid(struct state *st, int ktime) {
      
       if (st->grid.tiles[i][j].cl == grassland) {
         attrset(player_style(st->grid.tiles[i][j].pl));
-        output_units(st, &st->grid.tiles[i][j], i, j);
+        output_units(ui, &st->grid.tiles[i][j], i, j);
         attrset(A_NORMAL | COLOR_PAIR(1));
       }
 
@@ -146,7 +146,7 @@ void output_grid(struct state *st, int ktime) {
         if (p != st->controlled) {
           if (st->fg[p].flag[i][j] != 0 && ((ktime + p) / 5)%10 < 10) {
             attrset(player_style(p));
-            mvaddch(POSY(st,i,j), POSX(st,i,j), 'x');
+            mvaddch(POSY(ui,i,j), POSX(ui,i,j), 'x');
             attrset(A_NORMAL | COLOR_PAIR(1));
           }
         }
@@ -166,24 +166,24 @@ void output_grid(struct state *st, int ktime) {
         }
       }
       if (false && !b){
-        move(POSY(st,i,j), POSX(st,i,j)-1);
+        move(POSY(st,i,j), POSX(ui,i,j)-1);
         addstr("     "); 
       }
       // player 1 flags
       if (st->fg[st->controlled].flag[i][j] != 0 && (ktime / 5)%10 < 10) {
         attrset(A_BOLD | COLOR_PAIR(1));
-        mvaddch(POSY(st,i,j), POSX(st,i,j)+2, 'P');
+        mvaddch(POSY(ui,i,j), POSX(ui,i,j)+2, 'P');
         attrset(A_NORMAL | COLOR_PAIR(1));
       }
 
     }
   }
   
-  i = st->cursor.i;
-  j = st->cursor.j;
+  i = ui->cursor.i;
+  j = ui->cursor.j;
   attrset(A_BOLD | COLOR_PAIR(1));
-  mvaddch(POSY(st,i,j), POSX(st,i,j)-1, '(');
-  mvaddch(POSY(st,i+1,j), POSX(st,i+1,j)-1, ')');
+  mvaddch(POSY(ui,i,j), POSX(ui,i,j)-1, '(');
+  mvaddch(POSY(ui,i+1,j), POSX(ui,i+1,j)-1, ')');
   attrset(A_NORMAL | COLOR_PAIR(1));
 
   /* print populations at the cursor */
@@ -239,6 +239,15 @@ void output_grid(struct state *st, int ktime) {
     */
   }
   attrset(A_NORMAL | COLOR_PAIR(1));
+  
+  mvaddstr(y, 65, "Date:");
+  attrset(key_style);
+  int year = st->time/360;
+  int month = st->time - year*360;
+  int day = month%30 + 1;
+  month = month / 30 + 1;
+  sprintf(buf, "%i-%02i-%02i ", year, month, day);
+  mvaddstr(y, 72, buf);
 
   refresh();
 }

@@ -46,7 +46,7 @@ enum config_speed slower(enum config_speed sp){
 }
 
 void state_init(struct state *s, int w, int h, enum stencil shape,
-    unsigned int map_seed, int keep_random, int locations_num, 
+    unsigned int map_seed, int keep_random, int locations_num, int clients_num, 
     int conditions, int inequality, enum config_speed speed, enum config_dif dif){
   
   s->speed = speed;
@@ -55,14 +55,51 @@ void state_init(struct state *s, int w, int h, enum stencil shape,
   s->map_seed = map_seed;
   s->conditions = conditions;
   s->inequality = inequality;
+  s->time = (1850 + rand()%100) * 360 + rand()%360;
 
   /* player controlled from the keyboard */
   s->controlled = 1;
-  //int players[] = {7, 2, 3, 5};
-  //int players[] = {3, 4, 4, 6};
-  int players[] = {2, 3, 4, 5, 6, 7};
-  int players_arr_len = 6;
-  
+  /* int players[] = {7, 2, 3, 5}; */
+  /* int players[] = {2, 3, 4, 5, 6, 7}; */
+
+  int all_players[] = {1, 2, 3, 4, 5, 6, 7};
+  int comp_players[MAX_PLAYER]; 
+  int comp_players_num = 7 - clients_num;
+ 
+  s->kings_num = comp_players_num;
+  int ui_players[MAX_PLAYER];
+  int ui_players_num = clients_num;
+  int i;
+  for (i=0; i<7; ++i) {
+    if (i<clients_num)
+      ui_players[i] = all_players[i];
+    else {
+      int j = i - clients_num; /* computer player index / king's index */
+      comp_players[j] = all_players[i];
+      switch (i){
+        case 1:
+          king_init (&s->king[j], i+1, opportunist, &s->grid, s->dif); 
+          break;
+        case 2:
+          king_init (&s->king[j], i+1, one_greedy, &s->grid, s->dif);
+          break;
+        case 3:
+          king_init (&s->king[j], i+1, none, &s->grid, s->dif);
+          break;
+        case 4:
+          king_init (&s->king[j], i+1, aggr_greedy, &s->grid, s->dif);
+          break;
+        case 5:
+          king_init (&s->king[j], i+1, noble, &s->grid, s->dif);
+          break;
+        case 6:
+          king_init (&s->king[j], i+1, persistent_greedy, &s->grid, s->dif);
+          break;
+      }
+    }
+  }
+
+
   /* Initialize map generation with the map_seed */
   srand(s->map_seed);
 
@@ -79,6 +116,7 @@ void state_init(struct state *s, int w, int h, enum stencil shape,
       apply_stencil(shape, &s->grid, d, loc_arr, &available_loc_num);
      
       /* find the leftmost visible tile */
+      /*
       int i, j;
       s->xskip = MAX_WIDTH * 2 + 1; 
       for(i=0; i<s->grid.width; ++i)
@@ -89,12 +127,13 @@ void state_init(struct state *s, int w, int h, enum stencil shape,
               s->xskip = x;
           }
       s->xskip = s->xskip/2;
+      */
 
       /* conflict mode */
       conflict_code = 0;
       if (!keep_random) 
         conflict_code = conflict(&s->grid, loc_arr, available_loc_num, 
-            players, players_arr_len, locations_num, s->controlled, s->conditions, s->inequality);
+            comp_players, comp_players_num, locations_num, ui_players, ui_players_num, s->conditions, s->inequality);
     } while(conflict_code != 0 || !is_connected(&s->grid));
   }
   /* Map is ready */
@@ -104,8 +143,9 @@ void state_init(struct state *s, int w, int h, enum stencil shape,
     flag_grid_init(&s->fg[p], w, h);
     s->country[p].gold = 0;
   }
-  
+ 
   /* cursor location */
+  /*
   s->cursor.i = s->grid.width/2;
   s->cursor.j = s->grid.height/2;
   int i, j;
@@ -118,16 +158,44 @@ void state_init(struct state *s, int w, int h, enum stencil shape,
       }
     }
   }
+  */
 
   /* Kings */
-  s->kings_num = 6;
-  king_init (&s->king[0], 2, aggr_greedy, &s->grid, s->dif);
+  /* s->kings_num = 5; */
+  /* king_init (&s->king[0], 2, opportunist, &s->grid, s->dif); */
+  /*
   king_init (&s->king[1], 3, one_greedy, &s->grid, s->dif);
   king_init (&s->king[2], 7, persistent_greedy, &s->grid, s->dif);
-  king_init (&s->king[3], 5, opportunist, &s->grid, s->dif);
+  king_init (&s->king[3], 5, aggr_greedy, &s->grid, s->dif);
   king_init (&s->king[4], 4, none, &s->grid, s->dif);
-  king_init (&s->king[5], 6, noble, &s->grid, s->dif);
+  king_init (&s->king[0], 6, noble, &s->grid, s->dif);
+  */
+}
 
+void ui_init(struct state *s, struct ui *ui) {
+  /* cursor location */
+  ui->cursor.i = s->grid.width/2;
+  ui->cursor.j = s->grid.height/2;
+  int i, j;
+  for (i=0; i<s->grid.width; ++i) {
+    for (j=0; j<s->grid.height; ++j) {
+      if (s->grid.tiles[i][j].units[s->controlled][citizen] > 
+          s->grid.tiles[ui->cursor.i][ui->cursor.j].units[s->controlled][citizen]) {
+        ui->cursor.i = i;
+        ui->cursor.j = j;
+      }
+    }
+  }
+  /* find the leftmost visible tile */
+  ui->xskip = MAX_WIDTH * 2 + 1; 
+  for(i=0; i<s->grid.width; ++i)
+    for(j=0; j<s->grid.height; ++j)
+      if(is_visible(s->grid.tiles[i][j].cl)) {
+        int x = i*2 + j;
+        if (ui->xskip > x)
+          ui->xskip = x;
+      }
+  ui->xskip = ui->xskip/2;
 }
 
 #define GROWTH_1 1.10
@@ -176,6 +244,9 @@ void simulate(struct state *s) {
   int my_pop [MAX_PLAYER];
 
   int need_to_reeval = 0;
+
+  /* increment time */
+  s->time++;
 
   /* per tile events */
   for(i=0; i<s->grid.width; ++i) {

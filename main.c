@@ -28,34 +28,37 @@
 #include <math.h>
 #include <sys/time.h>
 #include <time.h>
+#include <fcntl.h>
 
 #include "common.h"
 #include "grid.h"
 #include "state.h"
 #include "output.h"
+#include "messaging.h"
+#include "client.h"
+#include "server.h"
 
 /*****************************************************************************/
 /*                           Global Constants                                */
 /*****************************************************************************/
-
-#define ESCAPE     '\033'
-#define K_UP       65
-#define K_DOWN     66
-#define K_RIGHT    67
-#define K_LEFT     68
 
 volatile   sig_atomic_t   input_ready;
 volatile   sig_atomic_t   time_to_redraw;
  
 struct aiocb kbcbuf;        /* an aio control buf    */
 
+#define DEF_SERVER_ADDR "127.0.0.1"
+#define DEF_SERVER_PORT "19140"
+#define DEF_CLIENT_PORT "19150"
+
 void on_timer(int signum);   /* handler for alarm     */
 void on_input(int);          /* handler for keybd     */
-int  update_from_input( struct state *st );
+int  update_from_input( struct state *st, struct ui *ui );
+int  update_from_input_client( struct state *st, struct ui *ui, int sfd, struct addrinfo *srv_addr);
+int  update_from_input_server( struct state *st );
 
 /* SIGIO signal handler -- it is responsible for retrieving user input  */
 void    setup_aio_buffer(struct aiocb *aio_buf);
-
 
 void print_help() {
   printf(
@@ -77,13 +80,13 @@ void print_help() {
     "-H height\n"
     "\tMap height (default is 21)\n\n"
     "-S [rhombus|rect|hex]\n"
-    "\tMap shape. It also sets N=4 for rhombus and rectangle, and N=6 for the hexagon.\n\n"
+    "\tMap shape (rectangle is default). Max number of countries N=4 for rhombus and rectangle, and N=6 for the hexagon.\n\n"
     "-l [2|3| ... N]\n"
     "\tSets L, the number of countries (default is N).\n\n"
     "-i [0|1|2|3|4]\n"
     "\tInequality between the countries (0 is the lowest, 4 in the highest).\n\n"
     "-q [1|2| ... L]\n"
-    "\tChoose player's location by its quality (1 = the best available on the map, L = the worst).\n\n"
+    "\tChoose player's location by its quality (1 = the best available on the map, L = the worst). Only in the singleplayer mode.\n\n"
     "-r\n"
     "\tAbsolutely random initial conditions, overrides options -l, -i, and -q.\n\n"
     "-d [ee|e|n|h|hh]\n"
@@ -92,6 +95,14 @@ void print_help() {
     "\tGame speed from the slowest to the fastest (default is normal).\n\n"
     "-R seed\n"
     "\tSpecify a random seed (unsigned integer) for map generation.\n\n"
+    "-E [1|2| ... L]\n"
+    "\tStart a server for not more than L clients.\n\n"
+    "-e port\n"
+    "\tServer's port (19140 is default).\n\n"
+    "-C IP\n"
+    "\tStart a client and connect to the provided server's IP-address.\n\n"
+    "-c port\n"
+    "\tClients's port (19150 is default).\n\n"
     "-h\n"
     "\tDisplay this help \n\n"
   );
@@ -131,43 +142,198 @@ void win_or_lose(struct state *st, int k) {
   }
 }
 
+int game_slowdown (int speed) {
+  int slowdown = 20;
+  switch (speed) {
+    case sp_pause: slowdown = 1; break;
+    case sp_slowest: slowdown = 160; break;
+    case sp_slower: slowdown = 80; break;
+    case sp_slow: slowdown = 40; break;
+    case sp_normal: slowdown = 20; break;
+    case sp_fast: slowdown = 10; break;
+    case sp_faster: slowdown = 5; break;
+    case sp_fastest: slowdown = 2; break;
+  }
+  return slowdown;
+}
+
 /* Run the game */
-void run (struct state *st) {
+void run (struct state *st, struct ui *ui) {
   int k = 0;
   int finished = 0;
   while( !finished ) {
     if (time_to_redraw) {
       k++;
       if (k>=1600) k=0;
-
-      int slowdown = 20;
-      switch (st->speed) {
-        case sp_pause: slowdown = 1; break;
-        case sp_slowest: slowdown = 160; break;
-        case sp_slower: slowdown = 80; break;
-        case sp_slow: slowdown = 40; break;
-        case sp_normal: slowdown = 20; break;
-        case sp_fast: slowdown = 10; break;
-        case sp_faster: slowdown = 5; break;
-        case sp_fastest: slowdown = 2; break;
-      }
-
+      
+      int slowdown = game_slowdown(st->speed);
       if (k % slowdown == 0 && st->speed != sp_pause) { 
         kings_move(st);
         simulate(st);
       }
-      output_grid(st, k);
+      output_grid(st, ui, k);
       time_to_redraw = 0;
 
       if (k%100 == 0) win_or_lose(st, k);
     }
     if ( input_ready ) {
       input_ready = 0;
-      finished = update_from_input(st);
+      finished = update_from_input(st, ui);
     }
     else
       pause();
   }
+}
+
+/* run client */
+void run_client (struct state *st, struct ui *ui, char *s_server_addr, char *s_server_port, char *s_client_port) {
+  int sfd; /* file descriptor of the socket */
+
+  int ret_code; /* code returned by a function */
+  
+  struct addrinfo srv_addr;
+
+  if ((ret_code = client_init_session 
+        (&sfd, s_client_port, &srv_addr, s_server_addr, s_server_port)) != 0) {
+    perror("Failed to initialize networking");
+    return;
+  }
+  /* non-blocking mode */
+  fcntl(sfd, F_SETFL, O_NONBLOCK);
+ 
+  int k = 0;
+  int finished = 0;
+  int initialized = 0;
+  st->time = 0;
+  while( !finished ) {
+    if (time_to_redraw) {
+      k++;
+      if (k>=1600) k=0;
+      time_to_redraw = 0;
+      
+      if (k%50 == 0) 
+        send_msg_c (sfd, &srv_addr, MSG_C_IS_ALIVE, 0, 0, 0);
+
+      int msg = client_receive_msg_s (sfd, st);
+      if (msg == MSG_S_STATE && initialized != 1) {
+        initialized = 1;
+        ui_init(st, ui);
+      }
+      if (initialized) {
+        output_grid(st, ui, k);
+      }
+      
+      /*
+      char s[256];
+      sprintf(s, "Width = %i", st->grid.width);
+      mvaddstr(1,1,s);
+      refresh();
+      */
+    }
+    if ( input_ready ) {
+      input_ready = 0;
+      finished = update_from_input_client(st, ui, sfd, &srv_addr);
+    }
+    else
+      pause();
+  }
+
+  close(sfd);
+}
+
+/* run server */
+void run_server (struct state *st, int cl_num_need, char *s_server_port) {
+  int sfd; /* file descriptor of the socket */
+  struct sockaddr_storage peer_addr; /* address you receive a message from */
+  socklen_t peer_addr_len = sizeof(struct sockaddr_storage);
+  ssize_t nread;
+
+  uint8_t buf[MSG_BUF_SIZE]; /* message buffer */
+
+  int ret_code; /* code returned by a function */
+  
+  if ((ret_code = server_init (&sfd, s_server_port)) != 0) {
+    perror("Failed to initialize networking");
+    return;
+  }
+  /* non-blocking mode */
+  fcntl(sfd, F_SETFL, O_NONBLOCK);
+
+  int cl_num = 0;
+  struct client_record cl[MAX_CLIENT];
+  enum server_mode mode = server_mode_lobby;
+  int finished = 0;
+  int k=0;
+  while( !finished ) {
+    if (time_to_redraw) {
+      switch(mode){
+        case server_mode_lobby:
+          /* Lobby */
+          nread = recvfrom(sfd, buf, MSG_BUF_SIZE-1, 0,
+              (struct sockaddr *) &peer_addr, &peer_addr_len);
+          /* try to add a new client */
+          if ( server_get_msg(buf, nread) > 0 ) {
+            int i;
+            int found = 0;
+            for(i=0; i<cl_num; ++i) {
+              found = found || sa_match(&peer_addr, &cl[i].sa);
+            }
+            if (!found && cl_num < cl_num_need) { /* add the new client */
+              cl[cl_num].name = "Jim";
+              cl[cl_num].id = cl_num;
+              cl[cl_num].pl = cl_num + 1; /* must be non-zero */
+              cl[cl_num].sa = peer_addr;
+                
+              addstr("!");
+              refresh();
+              cl_num++;
+            }
+
+            if (cl_num >= cl_num_need) { 
+              mode = server_mode_play; 
+              cl_num = cl_num_need; 
+            }
+          }
+          break;
+        case server_mode_play:
+          /* Game */
+          k++;
+          if (k>=1600) k=0;
+          int slowdown = game_slowdown(st->speed);
+          if (k % slowdown == 0 && st->speed != sp_pause) { 
+            kings_move(st);
+            simulate(st);
+            server_send_msg_s_state(sfd, cl, cl_num, st);
+          }
+          
+          nread = recvfrom(sfd, buf, MSG_BUF_SIZE-1, 0,
+              (struct sockaddr *) &peer_addr, &peer_addr_len);
+          if (nread != -1) {
+            int found_i = -1;
+            int i;
+            for(i=0; i<cl_num; ++i) {
+              if (sa_match(&peer_addr, &cl[i].sa)) found_i = i;
+            }
+            if (found_i>-1) {
+              int msg = server_process_msg_c(buf, nread, st, cl[found_i].pl);
+              if (msg == MSG_C_IS_ALIVE) addstr(".");
+              else addstr("+");
+              refresh();
+            }
+          }
+          break;
+      }
+
+      time_to_redraw = 0;
+    }
+    if ( input_ready ) {
+      input_ready = 0;
+      finished = update_from_input_server(st);
+    }
+    else
+      pause();
+  }
+  close(sfd);
 }
 
 /*****************************************************************************/
@@ -189,11 +355,21 @@ int main(int argc, char* argv[]){
   int conditions_were_set = 0;
 
   int ineq_val = RANDOM_INEQUALITY;
-  enum stencil shape_val = st_rhombus;
+  enum stencil shape_val = st_rect;
+
+  /* multiplayer option */
+  int multiplayer_flag = 0;
+  int server_flag = 1;
+  
+  char* val_client_port = strdup(DEF_CLIENT_PORT);
+  char* val_server_addr = strdup(DEF_SERVER_ADDR);
+  char* val_server_port = strdup(DEF_SERVER_PORT);
+
+  int val_clients_num = 1;
 
 	opterr = 0;
   int c;
-	while ((c = getopt (argc, argv, "hrW:H:i:l:q:d:s:R:S:")) != -1){
+	while ((c = getopt (argc, argv, "hrW:H:i:l:q:d:s:R:S:E:e:C:c:")) != -1){
 		switch(c){
 			case 'r': r_flag = 1; break;
 			//case 'f': f_val = optarg; break;
@@ -281,6 +457,32 @@ int main(int argc, char* argv[]){
                   return 1;
                 }
                 break;
+
+                /* multiplayer-related options */
+			case 'E': { char* endptr = NULL;
+									val_clients_num = strtol(optarg, &endptr, 10);
+									if (*endptr != '\0') {
+                    print_help();
+										return 1;
+									}
+                  multiplayer_flag = 1;
+                  server_flag = 1; 
+                }
+                break;
+      case 'e':
+                free(val_server_port);
+                val_server_port = strdup(optarg);
+                break;
+			case 'C': 
+                multiplayer_flag = 1;
+                server_flag = 0; 
+                free(val_server_addr);
+                val_server_addr = strdup(optarg);
+                break;
+      case 'c':
+                free(val_client_port);
+                val_client_port = strdup(optarg);
+                break;
       case '?': case 'h':
           print_help();
 					return 1;
@@ -297,6 +499,11 @@ int main(int argc, char* argv[]){
       return 1;
     }
     if (conditions_were_set && (conditions_val<1 || conditions_val>l_val)) {
+      print_help();
+      return 1;
+    }
+
+    if (val_clients_num < 1 || val_clients_num > l_val) {
       print_help();
       return 1;
     }
@@ -349,38 +556,30 @@ int main(int argc, char* argv[]){
   init_pair(7, COLOR_MAGENTA, COLOR_BLACK);
   init_pair(8, COLOR_CYAN, COLOR_BLACK);
  
-  /*
-  int d = 9;
-  int fbg = COLOR_BLUE;
-  init_pair(d+0, COLOR_WHITE, fbg);
-  init_pair(d+1, COLOR_WHITE, fbg);
-  init_pair(d+2, COLOR_BLACK, fbg);
-  init_pair(d+3, COLOR_RED, fbg);
-  init_pair(d+4, COLOR_GREEN, fbg);
-  init_pair(d+5, COLOR_BLUE, fbg);
-  init_pair(d+6, COLOR_YELLOW, fbg);
-  init_pair(d+7, COLOR_MAGENTA, fbg);
-  init_pair(d+8, COLOR_CYAN, fbg);
-  */
-
   color_set(0, NULL);
   assume_default_colors(COLOR_WHITE, COLOR_BLACK);
   clear();
-
-  /* Initialize the parameters of the program */
-
-  input_ready = 0;
-  time_to_redraw = 1;
-
-  attrset(A_BOLD | COLOR_PAIR(2));
-  mvaddstr(0,0,"Map is generated. Please wait.");
-  refresh();
-
+    
   struct state st;
-  state_init(&st, w_val, h_val, shape_val, seed_val, r_flag, l_val, conditions_val, ineq_val, sp_val, dif_val);
-  
-  clear();
+  struct ui ui;
 
+  if (!multiplayer_flag || server_flag || !server_flag) { /* normal single-player mode */
+    /* Initialize the parameters of the program */
+    attrset(A_BOLD | COLOR_PAIR(2));
+    mvaddstr(0,0,"Map is generated. Please wait.");
+    refresh();
+
+    state_init(&st, w_val, h_val, shape_val, seed_val, r_flag, l_val, val_clients_num, conditions_val, ineq_val, sp_val, dif_val);
+   
+    ui_init(&st, &ui);
+
+    clear();
+  } 
+  else {
+    ui_init(&st, &ui);
+    st.controlled = 1;
+  }
+ 
   /* initialize aio buffer for the first read and place call */
   setup_aio_buffer(&kbcbuf);                         
   aio_read(&kbcbuf);                            
@@ -396,9 +595,18 @@ int main(int argc, char* argv[]){
     setitimer(ITIMER_REAL, &it, NULL);
   }
   refresh();        
+  input_ready = 0;
+  time_to_redraw = 1;
   
-  /* Run the game */
-  run(&st);
+
+  if (!multiplayer_flag) {
+    /* Run the game */
+    run(&st, &ui);
+  }
+  else {
+    if (server_flag) run_server(&st, val_clients_num, val_server_port);
+    else run_client(&st, &ui, val_server_addr, val_server_port, val_client_port);
+  }
 
   /* Restore the teminal state */
   echo();
@@ -406,7 +614,12 @@ int main(int argc, char* argv[]){
   clear();
   endwin();
 
-  printf ("Random seed was %i\n", st.map_seed);
+  if (!multiplayer_flag || server_flag)
+    printf ("Random seed was %i\n", st.map_seed);
+
+  free(val_server_addr);
+  free(val_server_port);
+  free(val_client_port);
   return 0;
 }
 
@@ -423,7 +636,7 @@ void on_input(int signo)
 /*  Handler called when aio_read() has stuff to read */
 /*  First check for any error codes, and if ok, then get the return code */
 
-int update_from_input( struct state *st )
+int update_from_input( struct state *st, struct ui *ui )
 {
     int c;
     char *cp = (char *) kbcbuf.aio_buf;      /* cast to char *  */
@@ -436,8 +649,8 @@ int update_from_input( struct state *st )
         /* get number of chars read  */
         if ( aio_return(&kbcbuf) == 1 ) {
             c = *cp;
-            int cursi = st->cursor.i;
-            int cursj = st->cursor.j;
+            int cursi = ui->cursor.i;
+            int cursj = ui->cursor.j;
             /*ndelay = 0; */
             switch (c) {
                 case 'Q':
@@ -477,10 +690,10 @@ int update_from_input( struct state *st )
                     cursi--;
                   break;
                 case ' ':
-                  if (st->fg[st->controlled].flag[st->cursor.i][st->cursor.j] == 0)
-                    add_flag (&st->grid, &st->fg[st->controlled], st->cursor.i, st->cursor.j, FLAG_POWER);
+                  if (st->fg[st->controlled].flag[ui->cursor.i][ui->cursor.j] == 0)
+                    add_flag (&st->grid, &st->fg[st->controlled], ui->cursor.i, ui->cursor.j, FLAG_POWER);
                   else
-                    remove_flag (&st->grid, &st->fg[st->controlled], st->cursor.i, st->cursor.j, FLAG_POWER);
+                    remove_flag (&st->grid, &st->fg[st->controlled], ui->cursor.i, ui->cursor.j, FLAG_POWER);
                   break;
                 case 'x':
                   remove_flags_with_prob (&st->grid, &st->fg[st->controlled], 1.0);
@@ -490,7 +703,7 @@ int update_from_input( struct state *st )
                   break;
                 case 'r':
                 case 'v':
-                  build (&st->grid, &st->country[st->controlled], st->controlled, st->cursor.i, st->cursor.j);
+                  build (&st->grid, &st->country[st->controlled], st->controlled, ui->cursor.i, ui->cursor.j);
                   break;
                 
                 case ESCAPE:
@@ -501,8 +714,8 @@ int update_from_input( struct state *st )
             cursi = IN_SEGMENT(cursi, 0, st->grid.width-1);
             cursj = IN_SEGMENT(cursj, 0, st->grid.height-1);
             if ( is_visible(st->grid.tiles[cursi][cursj].cl) ) {
-              st->cursor.i = cursi;
-              st->cursor.j = cursj;
+              ui->cursor.i = cursi;
+              ui->cursor.j = cursj;
             }
 
         }                
@@ -511,6 +724,49 @@ int update_from_input( struct state *st )
     return finished;
 }
 
+/* client version */
+int update_from_input_client ( struct state *st, struct ui *ui, int sfd, struct addrinfo *srv_addr)
+{
+    int c;
+    char *cp = (char *) kbcbuf.aio_buf;      /* cast to char *  */
+    int finished=0;
+
+    /* check for errors  */
+    if ( aio_error(&kbcbuf) != 0 )
+        perror("reading failed");
+    else 
+        /* get number of chars read  */
+        if ( aio_return(&kbcbuf) == 1 ) {
+          c = *cp;
+          finished = client_process_input (st, ui, c, sfd, srv_addr);
+        }                
+    /* place a new request  */
+    aio_read(&kbcbuf);
+    return finished;
+}
+
+/* server version */
+int update_from_input_server ( struct state *st )
+{
+    int c;
+    char *cp = (char *) kbcbuf.aio_buf;      /* cast to char *  */
+    int finished=0;
+
+    /* check for errors  */
+    if ( aio_error(&kbcbuf) != 0 )
+        perror("reading failed");
+    else 
+        /* get number of chars read  */
+        if ( aio_return(&kbcbuf) == 1 ) {
+          c = *cp;
+          switch (c) {
+            case 'q': case 'Q': finished = 1; break;
+          }
+        }                
+    /* place a new request  */
+    aio_read(&kbcbuf);
+    return finished;
+}
 /*****************************************************************************/
 /*                           SIGALRM Signal Handler                          */
 /*****************************************************************************/

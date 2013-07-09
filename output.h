@@ -32,7 +32,7 @@
     st is the current game state,
     ktime is the timestep (can be used for animation primarily)
 */
-void output_grid(struct state *st, int ktime);
+void output_grid(struct state *st, struct ui *ui, int ktime);
 
 #endif
 
