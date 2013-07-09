@@ -190,8 +190,9 @@ Multiplayer
   To start a client and connect to the server:
     $ ./curseofwar -C <server's IP> 
 
-  To specify ports, use -e option for server's port, and -c option for client's port.
-  By default, servers are using port 19140, and clients are using port 19150.
+  To specify ports, use -e option for server's port, and -c option for 
+  client's port. By default, servers are using port 19140, and clients 
+  are using port 19150.
 
   Examples:
   Start a server for a single client using port 11111
@@ -207,16 +208,19 @@ Multiplayer
   the map and other data are transmitted to clients, once they are connected. 
   
   Example:
-  Server for 3 clients, no computer opponents, hexagonal map, and equal conditions for all:
+  Server for 3 clients, no computer opponents, 
+  hexagonal map, and equal conditions for all:
     $ ./curseofwar -E3 -l3 -S hex -i0 
   
-  Game speed cannot be changed by a client, so it must be set initially by the server.
-  Not all data is sent to clients (e.g. some info about population).
+  Game speed cannot be changed by a client, so it must be set initially 
+  by the server. Not all data is sent to clients (e.g. some info about 
+  population).
 
-  Multiplayer mode is at relatively early development stage. Changes may occure at any moment.
-  When you play with other people, make sure that you are using the same version of the game.
-  Hopefully, game's client-server communication protocol will be improved in future. 
-  All communication is made via UDP. 
+  Multiplayer mode is at relatively early development stage. 
+  Changes may occure at any moment. When you play with other people, 
+  make sure that you are using the same version of the game.
+  Hopefully, game's client-server communication protocol will be 
+  improved in future. All communication is made via UDP. 
 
   Please, report you problems with multiplayer.
 
