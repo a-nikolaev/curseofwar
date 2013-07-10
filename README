@@ -43,7 +43,8 @@ Command line arguments
     Map height (default is 21)
 
   -S [rhombus|rect|hex]
-    Map shape (rectangle is default). Max number of countries N=4 for rhombus and rectangle, and N=6 for the hexagon.
+    Map shape (rectangle is default). Max number of countries N=4 for 
+    rhombus and rectangle, and N=6 for the hexagon.
 
   -l [2|3| ... N]
     Sets L, the number of countries (default is N).
@@ -52,7 +53,8 @@ Command line arguments
     Inequality between the countries (0 is the lowest, 4 in the highest).
 
   -q [1|2| ... L]
-    Choose player's location by its quality (1 = the best available on the map, L = the worst). Only in the singleplayer mode.
+    Choose player's location by its quality: 1 = the best available 
+    on the map, and L = the worst. Only in the singleplayer mode.
 
   -r
     Absolutely random initial conditions, overrides options -l, -i, and -q.
@@ -191,36 +193,35 @@ Multiplayer
     $ ./curseofwar -C <server's IP> 
 
   To specify ports, use -e option for server's port, and -c option for 
-  client's port. By default, servers are using port 19140, and clients 
-  are using port 19150.
+  client's port. By default, servers are using port 19140, and clients are 
+  using port 19150.
 
-  Examples:
-  Start a server for a single client using port 11111
-    $ ./curseofwar -E 1 -e 11111
+    Examples:
+      Start a server for a single client using port 11111
+        $ ./curseofwar -E 1 -e 11111
 
-  To connect to it:
-    $ ./curseofwar -C <server's IP> -e 11111
-  
-  Alternatively, to connect to it using port 12345 on the client's side:
-    $ ./curseofwar -C <server's IP> -c 12345 -e 11111
+      To connect to it:
+        $ ./curseofwar -C <server's IP> -e 11111
+      
+      Alternatively, to connect to it using port 12345 on the client's side:
+        $ ./curseofwar -C <server's IP> -c 12345 -e 11111
 
   Note that all needed map options must be setup when you start a server, 
   the map and other data are transmitted to clients, once they are connected. 
   
-  Example:
-  Server for 3 clients, no computer opponents, 
-  hexagonal map, and equal conditions for all:
-    $ ./curseofwar -E3 -l3 -S hex -i0 
+    Example:
+      Server for 3 clients, no computer opponents, hexagonal map, and equal 
+      conditions for all:
+        $ ./curseofwar -E3 -l3 -S hex -i0 
   
-  Game speed cannot be changed by a client, so it must be set initially 
-  by the server. Not all data is sent to clients (e.g. some info about 
-  population).
+  Game speed cannot be changed by a client, so it must be set initially by 
+  the server. Not all data is sent to clients (e.g. info about population is 
+  not sent in full).
 
-  Multiplayer mode is at relatively early development stage. 
-  Changes may occure at any moment. When you play with other people, 
-  make sure that you are using the same version of the game.
-  Hopefully, game's client-server communication protocol will be 
-  improved in future. All communication is made via UDP. 
+  Multiplayer mode is at relatively early development stage. Changes may occure
+  at any moment. When you play with other people, make sure that you are using
+  the same version of the game. Hopefully, game's client-server communication 
+  protocol will be improved in future. All communication is made via UDP. 
 
   Please, report you problems with multiplayer.
 
