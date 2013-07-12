@@ -219,7 +219,7 @@ void action_aggr_greedy (struct king *k, struct grid *g, struct flag_grid *fg) {
 
 void action_one_greedy (struct king *k, struct grid *g, struct flag_grid *fg) {
   int i, j; 
-  int i_best, j_best;
+  int i_best = 0, j_best = 0;
   float v_best = -1.0;
   for (i=0; i<g->width; ++i) {
     for (j=0; j<g->height; ++j) {

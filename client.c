@@ -76,7 +76,7 @@ int client_receive_msg_s (int sfd, struct state *st) {
       (struct sockaddr *) &peer_addr, &peer_addr_len);
   if (nread == -1) return -1; /* Ignore failed request */
  
-  uint8_t msg;
+  uint8_t msg = 0;
   if (nread >= 1) {
     msg = buf[0];
     switch (msg) {
