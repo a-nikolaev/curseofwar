@@ -11,7 +11,7 @@ OBJS    = $(patsubst %.c,%.o,$(SRCS))
 EXEC   = curseofwar
 EXECS = $(EXEC)
 CFLAGS  += -Wall
-LDFLAGS += -lncurses -lm
+LDFLAGS += -lncurses -lm -lrt
 
 .PHONY: all clean cleanall
 
