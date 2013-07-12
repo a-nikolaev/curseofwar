@@ -8,10 +8,10 @@ BINDIR = $(PREFIX)/bin
 SRCS    = $(wildcard *.c)
 HDRS    = $(wildcard *.h)
 OBJS    = $(patsubst %.c,%.o,$(SRCS))
-EXEC   = curseofwar 
+EXEC   = curseofwar
 EXECS = $(EXEC)
-CFLAGS  = -Wall 
-LDFLAGS = -lncurses -lm -lrt
+CFLAGS  += -Wall
+LDFLAGS += -lncurses -lm
 
 .PHONY: all clean cleanall
 
@@ -21,7 +21,7 @@ clean:
 	-rm -f $(OBJS) $(EXECS)
 
 %.o: %.c $(HDRS)
-	$(CC) $(CFLAGS) -c $(patsubst %.o,%.c,$@) 
+	$(CC) $(CFLAGS) -c $(patsubst %.o,%.c,$@)
 
 $(EXEC): $(OBJS)
 	$(CC) $(CFLAGS) -o $(EXEC) grid.o state.o king.o network.o output.o client.o server.o main.o $(LDFLAGS)
@@ -29,10 +29,10 @@ $(EXEC): $(OBJS)
 
 install:
 	$(INSTALL) -D $(EXEC) $(BINDIR)/$(EXEC)
- 
-install-strip: 
+
+install-strip:
 	$(INSTALL) -D -s $(EXEC) $(BINDIR)/$(EXEC)
-		 
+
 uninstall:
 	  -rm $(BINDIR)/$(EXEC)
 
