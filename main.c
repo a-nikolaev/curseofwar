@@ -531,6 +531,8 @@ int main(int argc, char* argv[]){
   if ( sigaction(SIGIO, &newhandler, NULL) == -1 )
     perror("sigaction");
 
+  sigemptyset(&blocked);                  /* clear all bits       */
+  newhandler.sa_mask = blocked;           /* store blockmask      */
   newhandler.sa_handler = on_timer;      /* handler function     */
   if ( sigaction(SIGALRM, &newhandler, NULL) == -1 )
     perror("sigaction");
@@ -581,23 +583,27 @@ int main(int argc, char* argv[]){
   }
  
   /* initialize aio buffer for the first read and place call */
+  /*
   setup_aio_buffer(&kbcbuf);                         
   aio_read(&kbcbuf);                            
+  */
+  
+  /* Turn on keyboard signals */
+  fcntl(0, F_SETOWN, getpid()); 
+  int fd_flags = fcntl(0, F_GETFL);
+  fcntl(0, F_SETFL, (fd_flags|O_ASYNC));
 
   /* Start the real time interval timer with delay interval size */
-  //set_timer( ITIMER_REAL, 10, 10 );
-  { 
-    struct itimerval it;
-    it.it_value.tv_sec = 0;
-    it.it_value.tv_usec = 10000;
-    it.it_interval.tv_sec = 0;
-    it.it_interval.tv_usec = 10000;
-    setitimer(ITIMER_REAL, &it, NULL);
-  }
+  struct itimerval it;
+  it.it_value.tv_sec = 0;
+  it.it_value.tv_usec = 10000;
+  it.it_interval.tv_sec = 0;
+  it.it_interval.tv_usec = 10000;
+  setitimer(ITIMER_REAL, &it, NULL);
+  
   refresh();        
   input_ready = 0;
   time_to_redraw = 1;
-  
 
   if (!multiplayer_flag) {
     /* Run the game */
@@ -639,16 +645,15 @@ void on_input(int signo)
 int update_from_input( struct state *st, struct ui *ui )
 {
     int c;
-    char *cp = (char *) kbcbuf.aio_buf;      /* cast to char *  */
+    char buf[1];
     int finished=0;
 
     /* check for errors  */
-    if ( aio_error(&kbcbuf) != 0 )
+    if ( 0 != 0 )
         perror("reading failed");
     else 
-        /* get number of chars read  */
-        if ( aio_return(&kbcbuf) == 1 ) {
-            c = *cp;
+        if ( fread(buf, 1, 1, stdin) == 1 ) {
+            c = buf[0];
             int cursi = ui->cursor.i;
             int cursj = ui->cursor.j;
             /*ndelay = 0; */
@@ -720,7 +725,7 @@ int update_from_input( struct state *st, struct ui *ui )
 
         }                
     /* place a new request  */
-    aio_read(&kbcbuf);
+    /* aio_read(&kbcbuf); */
     return finished;
 }
 
@@ -728,20 +733,20 @@ int update_from_input( struct state *st, struct ui *ui )
 int update_from_input_client ( struct state *st, struct ui *ui, int sfd, struct addrinfo *srv_addr)
 {
     int c;
-    char *cp = (char *) kbcbuf.aio_buf;      /* cast to char *  */
+    char buf[1];
     int finished=0;
 
     /* check for errors  */
-    if ( aio_error(&kbcbuf) != 0 )
+    if ( 0 != 0 )
         perror("reading failed");
     else 
         /* get number of chars read  */
-        if ( aio_return(&kbcbuf) == 1 ) {
-          c = *cp;
+        if ( fread(buf, 1, 1, stdin) == 1 ) {
+          c = buf[0];
           finished = client_process_input (st, ui, c, sfd, srv_addr);
         }                
     /* place a new request  */
-    aio_read(&kbcbuf);
+    /* aio_read(&kbcbuf); */
     return finished;
 }
 
@@ -749,22 +754,21 @@ int update_from_input_client ( struct state *st, struct ui *ui, int sfd, struct 
 int update_from_input_server ( struct state *st )
 {
     int c;
-    char *cp = (char *) kbcbuf.aio_buf;      /* cast to char *  */
+    char buf[1];
     int finished=0;
 
     /* check for errors  */
-    if ( aio_error(&kbcbuf) != 0 )
+    if ( 0 != 0 )
         perror("reading failed");
     else 
-        /* get number of chars read  */
-        if ( aio_return(&kbcbuf) == 1 ) {
-          c = *cp;
+        if ( fread(buf, 1, 1, stdin) == 1 ) {
+          c = buf[0];
           switch (c) {
             case 'q': case 'Q': finished = 1; break;
           }
         }                
     /* place a new request  */
-    aio_read(&kbcbuf);
+    /* aio_read(&kbcbuf); */
     return finished;
 }
 /*****************************************************************************/
@@ -774,7 +778,9 @@ int update_from_input_server ( struct state *st )
 /* SIGALRM handler -- moves string on the screen when the signal is received */
 void on_timer(int signum)
 {
-    time_to_redraw = 1;
+  time_to_redraw = 1;
+  addstr("@");
+  refresh();
 }
 
 /*****************************************************************************/
