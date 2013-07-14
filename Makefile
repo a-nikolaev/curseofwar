@@ -27,7 +27,7 @@ $(EXEC): $(OBJS)
 	$(CC) $(CFLAGS) -o $(EXEC) grid.o state.o king.o network.o output.o client.o server.o main.o $(LDFLAGS)
 
 gzipman: $(EXEC).1
-	gzip -kf $^
+	gzip < $^ > $^.gz
 
 install:
 	$(INSTALL) -D $(EXEC) $(BINDIR)/$(EXEC)
