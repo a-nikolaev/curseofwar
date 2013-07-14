@@ -23,7 +23,6 @@
 #include <locale.h>
 #include <signal.h>
 #include <string.h>
-#include <aio.h>
 #include <getopt.h>
 #include <math.h>
 #include <sys/time.h>
@@ -45,20 +44,14 @@
 volatile   sig_atomic_t   input_ready;
 volatile   sig_atomic_t   time_to_redraw;
  
-struct aiocb kbcbuf;        /* an aio control buf    */
-
 #define DEF_SERVER_ADDR "127.0.0.1"
 #define DEF_SERVER_PORT "19140"
 #define DEF_CLIENT_PORT "19150"
 
 void on_timer(int signum);   /* handler for alarm     */
-void on_input(int);          /* handler for keybd     */
 int  update_from_input( struct state *st, struct ui *ui );
 int  update_from_input_client( struct state *st, struct ui *ui, int sfd, struct addrinfo *srv_addr);
 int  update_from_input_server( struct state *st );
-
-/* SIGIO signal handler -- it is responsible for retrieving user input  */
-void    setup_aio_buffer(struct aiocb *aio_buf);
 
 void print_help() {
   printf(
@@ -176,12 +169,8 @@ void run (struct state *st, struct ui *ui) {
 
       if (k%100 == 0) win_or_lose(st, k);
     }
-    if ( input_ready ) {
-      input_ready = 0;
-      finished = update_from_input(st, ui);
-    }
-    else
-      pause();
+    finished = update_from_input(st, ui);
+    pause(); // sleep until woken up by SIGALRM
   }
 }
 
@@ -222,20 +211,9 @@ void run_client (struct state *st, struct ui *ui, char *s_server_addr, char *s_s
       if (initialized) {
         output_grid(st, ui, k);
       }
-      
-      /*
-      char s[256];
-      sprintf(s, "Width = %i", st->grid.width);
-      mvaddstr(1,1,s);
-      refresh();
-      */
     }
-    if ( input_ready ) {
-      input_ready = 0;
-      finished = update_from_input_client(st, ui, sfd, &srv_addr);
-    }
-    else
-      pause();
+    finished = update_from_input_client(st, ui, sfd, &srv_addr);
+    pause();
   }
 
   close(sfd);
@@ -326,12 +304,8 @@ void run_server (struct state *st, int cl_num_need, char *s_server_port) {
 
       time_to_redraw = 0;
     }
-    if ( input_ready ) {
-      input_ready = 0;
-      finished = update_from_input_server(st);
-    }
-    else
-      pause();
+    finished = update_from_input_server(st);
+    pause();
   }
   close(sfd);
 }
@@ -367,61 +341,61 @@ int main(int argc, char* argv[]){
 
   int val_clients_num = 1;
 
-	opterr = 0;
+  opterr = 0;
   int c;
-	while ((c = getopt (argc, argv, "hrW:H:i:l:q:d:s:R:S:E:e:C:c:")) != -1){
-		switch(c){
-			case 'r': r_flag = 1; break;
-			//case 'f': f_val = optarg; break;
-			case 'W': { char* endptr = NULL;
-									w_val = MAX(14, strtol(optarg, &endptr, 10));
-									if (*endptr != '\0') {
+  while ((c = getopt (argc, argv, "hrW:H:i:l:q:d:s:R:S:E:e:C:c:")) != -1){
+    switch(c){
+      case 'r': r_flag = 1; break;
+      //case 'f': f_val = optarg; break;
+      case 'W': { char* endptr = NULL;
+                  w_val = MAX(14, strtol(optarg, &endptr, 10));
+                  if (*endptr != '\0') {
                     print_help();
-										return 1;
-									}
-								};
-								break;
-			case 'H': { char* endptr = NULL;
-									h_val = MAX(14, strtol(optarg, &endptr, 10));
-									if (*endptr != '\0') {
+                    return 1;
+                  }
+                };
+                break;
+      case 'H': { char* endptr = NULL;
+                  h_val = MAX(14, strtol(optarg, &endptr, 10));
+                  if (*endptr != '\0') {
                     print_help();
-										return 1;
-									}
-								};
-								break;
-			case 'i': { char* endptr = NULL;
-									ineq_val = strtol(optarg, &endptr, 10);
-									if (*endptr != '\0' || ineq_val < 0 || ineq_val > 4) {
+                    return 1;
+                  }
+                };
+                break;
+      case 'i': { char* endptr = NULL;
+                  ineq_val = strtol(optarg, &endptr, 10);
+                  if (*endptr != '\0' || ineq_val < 0 || ineq_val > 4) {
                     print_help();
-										return 1;
-									}
-								};
-								break;
-			case 'l': { char* endptr = NULL;
-									l_val = strtol(optarg, &endptr, 10);
-									if (*endptr != '\0') {
+                    return 1;
+                  }
+                };
+                break;
+      case 'l': { char* endptr = NULL;
+                  l_val = strtol(optarg, &endptr, 10);
+                  if (*endptr != '\0') {
                     print_help();
-										return 1;
-									}
-								};
-								break;
-			case 'q': { char* endptr = NULL;
-									conditions_val = strtol(optarg, &endptr, 10);
+                    return 1;
+                  }
+                };
+                break;
+      case 'q': { char* endptr = NULL;
+                  conditions_val = strtol(optarg, &endptr, 10);
                   conditions_were_set = 1;
-									if (*endptr != '\0') {
+                  if (*endptr != '\0') {
                     print_help();
-										return 1;
-									}
-								};
-								break;
-			case 'R': { char* endptr = NULL;
-									seed_val = abs(strtol(optarg, &endptr, 10));
-									if (*endptr != '\0' || *optarg == '\0') {
+                    return 1;
+                  }
+                };
+                break;
+      case 'R': { char* endptr = NULL;
+                  seed_val = abs(strtol(optarg, &endptr, 10));
+                  if (*endptr != '\0' || *optarg == '\0') {
                     print_help();
-										return 1;
-									}
-								};
-								break;
+                    return 1;
+                  }
+                };
+                break;
       case 'd': if (strcmp(optarg, "n") == 0) dif_val = dif_normal;
                 else if (strcmp(optarg, "e") == 0) dif_val = dif_easy;
                 else if (strcmp(optarg, "e1") == 0) dif_val = dif_easy;
@@ -459,12 +433,12 @@ int main(int argc, char* argv[]){
                 break;
 
                 /* multiplayer-related options */
-			case 'E': { char* endptr = NULL;
-									val_clients_num = strtol(optarg, &endptr, 10);
-									if (*endptr != '\0') {
+      case 'E': { char* endptr = NULL;
+                  val_clients_num = strtol(optarg, &endptr, 10);
+                  if (*endptr != '\0') {
                     print_help();
-										return 1;
-									}
+                    return 1;
+                  }
                   multiplayer_flag = 1;
                   server_flag = 1; 
                 }
@@ -473,7 +447,7 @@ int main(int argc, char* argv[]){
                 free(val_server_port);
                 val_server_port = strdup(optarg);
                 break;
-			case 'C': 
+      case 'C': 
                 multiplayer_flag = 1;
                 server_flag = 0; 
                 free(val_server_addr);
@@ -485,10 +459,10 @@ int main(int argc, char* argv[]){
                 break;
       case '?': case 'h':
           print_help();
-					return 1;
-			default: abort ();
-		}
-	}
+          return 1;
+      default: abort ();
+    }
+  }
   /* Adjust l_val and conditions_val */
   {
     int avlbl_loc_num = stencil_avlbl_loc_num (shape_val);
@@ -508,11 +482,6 @@ int main(int argc, char* argv[]){
       return 1;
     }
 
-    /*
-	  l_val = IN_SEGMENT(l_val, 2, avlbl_loc_num);
-    conditions_val = IN_SEGMENT(conditions_val, 1, avlbl_loc_num);
-    */
-
     if (shape_val == st_rect) {
       w_val = MIN(MAX_WIDTH-1, w_val+(h_val+1)/2);
     }
@@ -521,16 +490,9 @@ int main(int argc, char* argv[]){
   
   struct sigaction newhandler;            /* new settings         */
   sigset_t         blocked;               /* set of blocked sigs  */
-
-  newhandler.sa_handler = on_input;       /* handler function     */
   newhandler.sa_flags = SA_RESTART;       /* options     */
-
-  /* then build the list of blocked signals  */
   sigemptyset(&blocked);                  /* clear all bits       */
   newhandler.sa_mask = blocked;           /* store blockmask      */
-  if ( sigaction(SIGIO, &newhandler, NULL) == -1 )
-    perror("sigaction");
-
   newhandler.sa_handler = on_timer;      /* handler function     */
   if ( sigaction(SIGALRM, &newhandler, NULL) == -1 )
     perror("sigaction");
@@ -563,41 +525,32 @@ int main(int argc, char* argv[]){
   struct state st;
   struct ui ui;
 
-  if (!multiplayer_flag || server_flag || !server_flag) { /* normal single-player mode */
-    /* Initialize the parameters of the program */
-    attrset(A_BOLD | COLOR_PAIR(2));
-    mvaddstr(0,0,"Map is generated. Please wait.");
-    refresh();
+  /* Initialize the parameters of the program */
+  attrset(A_BOLD | COLOR_PAIR(2));
+  mvaddstr(0,0,"Map is generated. Please wait.");
+  refresh();
 
-    state_init(&st, w_val, h_val, shape_val, seed_val, r_flag, l_val, val_clients_num, conditions_val, ineq_val, sp_val, dif_val);
-   
-    ui_init(&st, &ui);
-
-    clear();
-  } 
-  else {
-    ui_init(&st, &ui);
-    st.controlled = 1;
-  }
+  state_init(&st, w_val, h_val, shape_val, seed_val, r_flag, l_val, val_clients_num, conditions_val, ineq_val, sp_val, dif_val);
  
-  /* initialize aio buffer for the first read and place call */
-  setup_aio_buffer(&kbcbuf);                         
-  aio_read(&kbcbuf);                            
+  ui_init(&st, &ui);
+
+  clear();
+ 
+  /* non-blocking input */
+  int fd_flags = fcntl(0, F_GETFL);
+  fcntl(0, F_SETFL, (fd_flags|O_NONBLOCK));
 
   /* Start the real time interval timer with delay interval size */
-  //set_timer( ITIMER_REAL, 10, 10 );
-  { 
-    struct itimerval it;
-    it.it_value.tv_sec = 0;
-    it.it_value.tv_usec = 10000;
-    it.it_interval.tv_sec = 0;
-    it.it_interval.tv_usec = 10000;
-    setitimer(ITIMER_REAL, &it, NULL);
-  }
+  struct itimerval it;
+  it.it_value.tv_sec = 0;
+  it.it_value.tv_usec = 10000;
+  it.it_interval.tv_sec = 0;
+  it.it_interval.tv_usec = 10000;
+  setitimer(ITIMER_REAL, &it, NULL);
+  
   refresh();        
   input_ready = 0;
   time_to_redraw = 1;
-  
 
   if (!multiplayer_flag) {
     /* Run the game */
@@ -628,99 +581,84 @@ int main(int argc, char* argv[]){
 /*                             SIGIO Signal Handler                          */
 /*****************************************************************************/
 
-void on_input(int signo)
-{
-    input_ready = 1;
-}
-
-/*  Handler called when aio_read() has stuff to read */
-/*  First check for any error codes, and if ok, then get the return code */
-
 int update_from_input( struct state *st, struct ui *ui )
 {
     int c;
-    char *cp = (char *) kbcbuf.aio_buf;      /* cast to char *  */
+    char buf[1];
     int finished=0;
 
-    /* check for errors  */
-    if ( aio_error(&kbcbuf) != 0 )
-        perror("reading failed");
-    else 
-        /* get number of chars read  */
-        if ( aio_return(&kbcbuf) == 1 ) {
-            c = *cp;
-            int cursi = ui->cursor.i;
-            int cursj = ui->cursor.j;
-            /*ndelay = 0; */
-            switch (c) {
-                case 'Q':
-                case 'q': 
-                    finished = 1;                     /* quit program */
-                    break;
-                case 'f':
-                    st->prev_speed = st->speed;
-                    st->speed = faster(st->speed);
-                    break;
-                case 's':
-                    st->prev_speed = st->speed;
-                    st->speed = slower(st->speed);
-                    break;
-                case 'p':
-                    if (st->speed == sp_pause)
-                      st->speed = st->prev_speed;
-                    else {
-                      st->prev_speed = st->speed;
-                      st->speed = sp_pause;
-                    }
-                    break;
-                case 'h': case K_LEFT:
-                  cursi--;
-                  break;
-                case 'l': case K_RIGHT:
-                  cursi++;
-                  break;
-                case 'k': case K_UP:
-                  cursj--;
-                  if (cursj % 2 == 1)
-                    cursi++;
-                  break;
-                case 'j': case K_DOWN:
-                  cursj++;
-                  if (cursj % 2 == 0)
-                    cursi--;
-                  break;
-                case ' ':
-                  if (st->fg[st->controlled].flag[ui->cursor.i][ui->cursor.j] == 0)
-                    add_flag (&st->grid, &st->fg[st->controlled], ui->cursor.i, ui->cursor.j, FLAG_POWER);
-                  else
-                    remove_flag (&st->grid, &st->fg[st->controlled], ui->cursor.i, ui->cursor.j, FLAG_POWER);
-                  break;
-                case 'x':
-                  remove_flags_with_prob (&st->grid, &st->fg[st->controlled], 1.0);
-                  break;
-                case 'c':
-                  remove_flags_with_prob (&st->grid, &st->fg[st->controlled], 0.5);
-                  break;
-                case 'r':
-                case 'v':
-                  build (&st->grid, &st->country[st->controlled], st->controlled, ui->cursor.i, ui->cursor.j);
-                  break;
-                
-                case ESCAPE:
-                case 91:
-                  break;
+    while ( fread(buf, 1, 1, stdin) == 1 ) {
+        c = buf[0];
+        int cursi = ui->cursor.i;
+        int cursj = ui->cursor.j;
+        /*ndelay = 0; */
+        switch (c) {
+            case 'Q':
+            case 'q': 
+                finished = 1;                     /* quit program */
+                break;
+            case 'f':
+                st->prev_speed = st->speed;
+                st->speed = faster(st->speed);
+                break;
+            case 's':
+                st->prev_speed = st->speed;
+                st->speed = slower(st->speed);
+                break;
+            case 'p':
+                if (st->speed == sp_pause)
+                  st->speed = st->prev_speed;
+                else {
+                  st->prev_speed = st->speed;
+                  st->speed = sp_pause;
                 }
+                break;
+            case 'h': case K_LEFT:
+              cursi--;
+              break;
+            case 'l': case K_RIGHT:
+              cursi++;
+              break;
+            case 'k': case K_UP:
+              cursj--;
+              if (cursj % 2 == 1)
+                cursi++;
+              break;
+            case 'j': case K_DOWN:
+              cursj++;
+              if (cursj % 2 == 0)
+                cursi--;
+              break;
+            case ' ':
+              if (st->fg[st->controlled].flag[ui->cursor.i][ui->cursor.j] == 0)
+                add_flag (&st->grid, &st->fg[st->controlled], ui->cursor.i, ui->cursor.j, FLAG_POWER);
+              else
+                remove_flag (&st->grid, &st->fg[st->controlled], ui->cursor.i, ui->cursor.j, FLAG_POWER);
+              break;
+            case 'x':
+              remove_flags_with_prob (&st->grid, &st->fg[st->controlled], 1.0);
+              break;
+            case 'c':
+              remove_flags_with_prob (&st->grid, &st->fg[st->controlled], 0.5);
+              break;
+            case 'r':
+            case 'v':
+              build (&st->grid, &st->country[st->controlled], st->controlled, ui->cursor.i, ui->cursor.j);
+              break;
             
-            cursi = IN_SEGMENT(cursi, 0, st->grid.width-1);
-            cursj = IN_SEGMENT(cursj, 0, st->grid.height-1);
-            if ( is_visible(st->grid.tiles[cursi][cursj].cl) ) {
-              ui->cursor.i = cursi;
-              ui->cursor.j = cursj;
+            case ESCAPE:
+            case 91:
+              break;
             }
+        
+        cursi = IN_SEGMENT(cursi, 0, st->grid.width-1);
+        cursj = IN_SEGMENT(cursj, 0, st->grid.height-1);
+        if ( is_visible(st->grid.tiles[cursi][cursj].cl) ) {
+          ui->cursor.i = cursi;
+          ui->cursor.j = cursj;
+        }
 
-        }                
-    /* place a new request  */
-    aio_read(&kbcbuf);
+    }                
     return finished;
 }
 
@@ -728,20 +666,13 @@ int update_from_input( struct state *st, struct ui *ui )
 int update_from_input_client ( struct state *st, struct ui *ui, int sfd, struct addrinfo *srv_addr)
 {
     int c;
-    char *cp = (char *) kbcbuf.aio_buf;      /* cast to char *  */
+    char buf[1];
     int finished=0;
 
-    /* check for errors  */
-    if ( aio_error(&kbcbuf) != 0 )
-        perror("reading failed");
-    else 
-        /* get number of chars read  */
-        if ( aio_return(&kbcbuf) == 1 ) {
-          c = *cp;
-          finished = client_process_input (st, ui, c, sfd, srv_addr);
-        }                
-    /* place a new request  */
-    aio_read(&kbcbuf);
+    while ( fread(buf, 1, 1, stdin) == 1 ) {
+      c = buf[0];
+      finished = client_process_input (st, ui, c, sfd, srv_addr);
+    }                
     return finished;
 }
 
@@ -749,22 +680,15 @@ int update_from_input_client ( struct state *st, struct ui *ui, int sfd, struct 
 int update_from_input_server ( struct state *st )
 {
     int c;
-    char *cp = (char *) kbcbuf.aio_buf;      /* cast to char *  */
+    char buf[1];
     int finished=0;
 
-    /* check for errors  */
-    if ( aio_error(&kbcbuf) != 0 )
-        perror("reading failed");
-    else 
-        /* get number of chars read  */
-        if ( aio_return(&kbcbuf) == 1 ) {
-          c = *cp;
-          switch (c) {
-            case 'q': case 'Q': finished = 1; break;
-          }
-        }                
-    /* place a new request  */
-    aio_read(&kbcbuf);
+    while ( fread(buf, 1, 1, stdin) == 1 ) {
+      c = buf[0];
+      switch (c) {
+        case 'q': case 'Q': finished = 1; break;
+      }
+    }                
     return finished;
 }
 /*****************************************************************************/
@@ -774,28 +698,7 @@ int update_from_input_server ( struct state *st )
 /* SIGALRM handler -- moves string on the screen when the signal is received */
 void on_timer(int signum)
 {
-    time_to_redraw = 1;
-}
-
-/*****************************************************************************/
-/*                      Asynchronous I/O Library Setup                       */
-/*****************************************************************************/
-
-
-/*  The following function initializes the AIO structure to enable */
-/*  asynchronous I/O through the AIO library. */
-void setup_aio_buffer(struct aiocb *aio_buf)
-{
-    static char input[1];              /* 1 char of input  */
-
-    /* describe what to read  */
-    aio_buf->aio_fildes     = 0;       /* file descriptor for I/O */
-    aio_buf->aio_buf        = input;   /* address of buffer for I/O           */
-    aio_buf->aio_nbytes     = 1;       /* number of bytes to read  each time */
-    aio_buf->aio_offset     = 0;       /* offset in file to start reads   */
-
-    /* describe what to do when read is ready  */
-    aio_buf->aio_sigevent.sigev_notify = SIGEV_SIGNAL; 
-    aio_buf->aio_sigevent.sigev_signo  = SIGIO;       /* send SIGIO    */
+  time_to_redraw = 1;
+//  refresh();
 }
 

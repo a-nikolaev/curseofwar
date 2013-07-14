@@ -48,7 +48,7 @@ enum config_speed slower(enum config_speed sp){
 void state_init(struct state *s, int w, int h, enum stencil shape,
     unsigned int map_seed, int keep_random, int locations_num, int clients_num, 
     int conditions, int inequality, enum config_speed speed, enum config_dif dif){
-  
+ 
   s->speed = speed;
   s->prev_speed = s->speed;
   s->dif = dif;
@@ -99,7 +99,6 @@ void state_init(struct state *s, int w, int h, enum stencil shape,
     }
   }
 
-
   /* Initialize map generation with the map_seed */
   srand(s->map_seed);
 
@@ -115,20 +114,6 @@ void state_init(struct state *s, int w, int h, enum stencil shape,
       int d = 2;
       apply_stencil(shape, &s->grid, d, loc_arr, &available_loc_num);
      
-      /* find the leftmost visible tile */
-      /*
-      int i, j;
-      s->xskip = MAX_WIDTH * 2 + 1; 
-      for(i=0; i<s->grid.width; ++i)
-        for(j=0; j<s->grid.height; ++j)
-          if(is_visible(s->grid.tiles[i][j].cl)) {
-            int x = i*2 + j;
-            if (s->xskip > x)
-              s->xskip = x;
-          }
-      s->xskip = s->xskip/2;
-      */
-
       /* conflict mode */
       conflict_code = 0;
       if (!keep_random) 
@@ -143,34 +128,13 @@ void state_init(struct state *s, int w, int h, enum stencil shape,
     flag_grid_init(&s->fg[p], w, h);
     s->country[p].gold = 0;
   }
- 
-  /* cursor location */
-  /*
-  s->cursor.i = s->grid.width/2;
-  s->cursor.j = s->grid.height/2;
-  int i, j;
-  for (i=0; i<s->grid.width; ++i) {
-    for (j=0; j<s->grid.height; ++j) {
-      if (s->grid.tiles[i][j].units[s->controlled][citizen] > 
-          s->grid.tiles[s->cursor.i][s->cursor.j].units[s->controlled][citizen]) {
-        s->cursor.i = i;
-        s->cursor.j = j;
-      }
-    }
-  }
-  */
 
-  /* Kings */
-  /* s->kings_num = 5; */
-  /* king_init (&s->king[0], 2, opportunist, &s->grid, s->dif); */
-  /*
-  king_init (&s->king[1], 3, one_greedy, &s->grid, s->dif);
-  king_init (&s->king[2], 7, persistent_greedy, &s->grid, s->dif);
-  king_init (&s->king[3], 5, aggr_greedy, &s->grid, s->dif);
-  king_init (&s->king[4], 4, none, &s->grid, s->dif);
-  king_init (&s->king[0], 6, noble, &s->grid, s->dif);
-  */
+  /* kings evaluate the map */
+  for(p = 0; p < s->kings_num; ++p) {
+    king_evaluate_map(&s->king[p], &s->grid, dif);
+  }
 }
+
 
 void ui_init(struct state *s, struct ui *ui) {
   /* cursor location */
