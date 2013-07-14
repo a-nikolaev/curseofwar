@@ -15,10 +15,10 @@ LDFLAGS += -lncurses -lm
 
 .PHONY: all clean cleanall
 
-all: $(EXEC)
+all: $(EXEC) gzipman
 
 clean:
-	-rm -f $(OBJS) $(EXECS)
+	-rm -f $(OBJS) $(EXECS) $(EXEC).1.gz
 
 %.o: %.c $(HDRS)
 	$(CC) $(CFLAGS) -c $(patsubst %.o,%.c,$@)
@@ -26,6 +26,8 @@ clean:
 $(EXEC): $(OBJS)
 	$(CC) $(CFLAGS) -o $(EXEC) grid.o state.o king.o network.o output.o client.o server.o main.o $(LDFLAGS)
 
+gzipman: $(EXEC).1
+	gzip -kf $^
 
 install:
 	$(INSTALL) -D $(EXEC) $(BINDIR)/$(EXEC)
