@@ -10,8 +10,8 @@ HDRS    = $(wildcard *.h)
 OBJS    = $(patsubst %.c,%.o,$(SRCS))
 EXEC   = curseofwar
 EXECS = $(EXEC)
-CFLAGS  += -Wall
-LDFLAGS += -lncurses -lm -lrt
+CFLAGS  += -Wall -O2
+LDFLAGS += -lncurses -lm 
 
 .PHONY: all clean cleanall
 

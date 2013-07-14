@@ -129,7 +129,7 @@ void king_evaluate_map (struct king *k, struct grid *g, enum config_dif dif) {
 void king_init (struct king *k, int pl, enum strategy strat, struct grid *g, enum config_dif dif) {
   k->pl = pl;
   k->strategy = strat;
-  king_evaluate_map(k, g, dif);
+  //king_evaluate_map(k, g, dif);
 }
 
 int builder_default (struct king *k, struct country *c, struct grid *g, struct flag_grid *fg) {
