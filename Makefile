@@ -5,6 +5,7 @@ INSTALL = install
 PREFIX ?= $(DESTDIR)/usr
 MANPREFIX=$(PREFIX)/man
 BINDIR = $(PREFIX)/bin
+MANDIR = $(MANPREFIX)/man6
 
 SRCS    = $(wildcard *.c)
 HDRS    = $(wildcard *.h)
@@ -14,14 +15,12 @@ EXECS = $(EXEC)
 CFLAGS  += -Wall -O2
 LDFLAGS += -lncurses -lm 
 
-VERSION  = 1.1.2
-
 .PHONY: all clean cleanall
 
 all: $(EXEC) gzipman
 
 clean:
-	-rm -f $(OBJS) $(EXECS) $(EXEC).1.gz
+	-rm -f $(OBJS) $(EXECS) $(EXEC).6.gz
 
 %.o: %.c $(HDRS)
 	$(CC) $(CFLAGS) -c $(patsubst %.o,%.c,$@)
@@ -34,16 +33,14 @@ gzipman: $(EXEC).6
 
 install:
 	$(INSTALL) -D $(EXEC) $(BINDIR)/$(EXEC)
-	-mkdir -p ${MANPREFIX}/man6
-	-sed "s/VERSION/${VERSION}/g" < curseofwar.6 > ${MANPREFIX}/man6/curseofwar.6
-	-chmod 644 ${MANPREFIX}/man6/curseofwar.6
+	$(INSTALL) -D -m 644 $(EXEC).6.gz $(MANDIR)/$(EXEC).6.gz
 
 install-strip:
 	$(INSTALL) -D -s $(EXEC) $(BINDIR)/$(EXEC)
 
 uninstall:
 	  -rm $(BINDIR)/$(EXEC)
-	  -rm -f ${MANPREFIX}/man6/curseofwar.6
+	  -rm -f $(MANDIR)/$(EXEC).6.gz
 
 show-path:
 	@echo would install to ${BINDIR}
