@@ -29,21 +29,21 @@ clean:
 $(EXEC): $(OBJS)
 	$(CC) $(CFLAGS) -o $(EXEC) grid.o state.o king.o network.o output.o client.o server.o main.o $(LDFLAGS)
 
-gzipman: $(EXEC).1
+gzipman: $(EXEC).6
 	gzip < $^ > $^.gz
 
 install:
 	$(INSTALL) -D $(EXEC) $(BINDIR)/$(EXEC)
-	-mkdir -p ${DESTDIR}${MANPREFIX}/man6
-	-sed "s/VERSION/${VERSION}/g" < curseofwar.6 > ${DESTDIR}${MANPREFIX}/man6/curseofwar.6
-	-chmod 644 ${DESTDIR}${MANPREFIX}/man6/curseofwar.6
+	-mkdir -p ${MANPREFIX}/man6
+	-sed "s/VERSION/${VERSION}/g" < curseofwar.6 > ${MANPREFIX}/man6/curseofwar.6
+	-chmod 644 ${MANPREFIX}/man6/curseofwar.6
 
 install-strip:
 	$(INSTALL) -D -s $(EXEC) $(BINDIR)/$(EXEC)
 
 uninstall:
 	  -rm $(BINDIR)/$(EXEC)
-	  -rm -f ${DESTDIR}${MANPREFIX}/man6/curseofwar.6
+	  -rm -f ${MANPREFIX}/man6/curseofwar.6
 
 show-path:
 	@echo would install to ${BINDIR}
