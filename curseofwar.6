@@ -1,12 +1,255 @@
-.TH CURSEOFWAR "1" "July 2013" "curseofwar " "User Commands"
+.TH CURSEOFWAR "6" "July 2013" "curseofwar" "v1.1.2"
 .SH NAME
 curseofwar \- Real Time Strategy Game for Linux
+.SH SYNOPSIS
+.B curseofwar
+[
+.B \-c
+.I port
+]
+[
+.B \-C
+.I IP
+]
+[
+.B \-d
+.I difficulty
+]
+[
+.B \-e
+.I port
+]
+.PD 0
+.IP
+.PD
+[
+.B \-E
+.I clients
+]
+[
+.B \-h
+]
+[
+.B \-H
+.I height
+]
+[
+.B \-i
+.I inequality
+]
+.PD 0
+.IP
+.PD
+[
+.B \-l
+.I countries
+]
+[
+.B \-q
+.I quality
+]
+[
+.B \-r
+]
+[
+.B \-R
+.I seed
+]
+[
+.B \-s
+.I speed
+]
+[
+.B \-S
+.I shape
+]
+[
+.B \-W
+.I width
+]
 .SH DESCRIPTION
 This is a fast-paced action strategy game for Linux implemented using ncurses user interface.
 .PP
 Unlike most RTS, you are not controlling units, but focus on high-level strategic planning: Building infrastructure, securing resources, and moving your armies.
 .PP
 The core game mechanics turns out to be quite close to WWI-WWII type of warfare, however, there is no explicit reference to any historical period.
+
+See 
+.B HOW TO PLAY
+for more details.
+
+.SH OPTIONS
+.TP
+\fB\-c\fR \fIport\fR
+Clients's port (19150 is default).
+.TP
+\fB\-C\fR \fIIP\fR
+Start a client and connect to the provided server's IP\-address.
+.TP
+\fB\-d\fR [ee|e|n|h|hh]
+Difficulty level (AI) from the easiest to the hardest (default is normal).
+.TP
+\fB\-e\fR \fIport\fR
+Server's port (19140 is default).
+.TP
+\fB\-E\fR [1|2| ... L]
+Start a server for not more than L clients.
+.TP
+\fB\-h\fR
+Display this help
+.TP
+\fB\-H\fR \fIheight\fR
+Map height (default is 21)
+.TP
+\fB\-i\fR [0|1|2|3|4]
+Inequality between the countries (0 is the lowest, 4 in the highest).
+.TP
+\fB\-l\fR [2|3| ... N]
+Sets L, the number of countries (default is N).
+.TP
+\fB\-q\fR [1|2| ... L]
+Choose player's location by its quality (1 = the best available on the map, L = the worst). Only in the singleplayer mode.
+.TP
+\fB\-r\fR
+Absolutely random initial conditions, overrides options \fB\-l\fR, \fB\-i\fR, and \fB\-q\fR.
+.TP
+\fB\-R\fR \fIseed\fR
+Specify a random seed (unsigned integer) for map generation.
+.TP
+\fB\-s\fR [p|sss|ss|s|n|f|ff|fff]
+Game speed from the slowest to the fastest (default is normal).
+.TP
+\fB\-S\fR [rhombus|rect|hex]
+Map shape (rectangle is default). Max number of countries N=4 for rhombus and rectangle, and N=6 for the hexagon.
+.TP
+\fB\-W\fR \fIwidth\fR
+Map width (default is 21)
+.SH "HOW TO PLAY"
+Normally, the game starts with 4 small countries in the corners of the map. 
+You start as the ruler of the Green country, and your goal is to conquer 
+the whole map.
+
+.B Tiles
+
+The map is made of hexagonal tiles. They are: 
+    
+/\\^   Mountains, cannot be populated
+
+/$\\   Gold mines, cannot be populated too.
+    This is the source of gold for your country.
+    To control a mine, surround it with your army
+
+ n    Villages, have the slowest population growth (+10%)
+
+i=i   Towns, average population growth (+20%)
+
+W#W   Fortresses, high population growth (+30%)
+
+ -    Grassland, normal habitable territory
+
+.B People
+
+People are your primary resource. Thriving popluation is essential for your
+victory.
+Every tile can support at most 499 people from each country.
+When people from more than one country occupy the same tile, they fight.
+The country that has the highest population at the tile is called the tile
+owner.
+The population of the tile owner is shown on all grassland tiles as follows:
+
+ \.      1 - 3    citizens
+.br
+\&..      4 - 6
+.br
+\&...     7 - 12
+.br
+ :     13 - 25
+.br
+\&.:     26 - 50
+.br
+\&.:.    51 - 100
+.br
+ ::   101 - 200
+.br
+\&.::   201 - 400
+.br
+:::   400 - 499
+
+People migrate from highly populated tiles to less populated tiles.
+
+Population grows only in cities. In villages by 10%, in towns by 20%, and 
+fortresses by 30% every simulation step. By controlling cities, you control 
+their surrounding territory.
+
+.B Flags
+
+Every country can put flags on the map. Flags change migration rates,
+so that people of your country start gathering at the tiles with flags.
+Player's flags are shown as white "P" on the right side of a tile.
+Flags of the computer opponents are shown as "x" on the left side of a tile.
+
+The flags can be used to increase population of your own cities, as well as
+for conquering foreign territories.
+
+When countries are fighting for a city, and if the damage to the defender's 
+army is significant, the city can be destroyed: A fortress becomes a town, 
+a town becomes a village, and the village gets completely burnt by the invaders.
+.TP
+.B Countries
+.TP
+Computer opponents differ in personality, and it affects the way they fight.
+.SH MULTIPLAYER
+To start a server for two players:
+.IP
+.B curseofwar
+-E 2
+.PP
+To start a client and connect to the server:
+.IP
+.B curseofwar
+-C <server's IP> 
+.PP
+To specify ports, use -e option for server's port, and -c option for 
+client's port. By default, servers are using port 19140, and clients are 
+using port 19150.
+
+.B Examples:
+  Start a server for a single client using port 11111
+.IP
+.B curseofwar
+-E 1 -e 11111
+.PP
+  To connect to it:
+.IP
+.B curseofwar
+-C <server's IP> -e 11111
+.PP
+  Alternatively, to connect to it using port 12345 on the client's side:
+.IP
+.B curseofwar
+-C <server's IP> -c 12345 -e 11111
+.PP
+Note that all needed map options must be setup when you start a server, 
+the map and other data are transmitted to clients, once they are connected.
+
+.B Example:
+  Server for 3 clients, no computer opponents, hexagonal map, and equal 
+  conditions for all:
+.IP
+.B curseofwar
+-E3 -l3 -S hex -i0 
+.PP
+Game speed cannot be changed by a client, so it must be set initially by 
+the server. Not all data is sent to clients (e.g. info about population is 
+not sent in full).
+
+Multiplayer mode is at relatively early development stage. Changes may occure
+at any moment. When you play with other people, make sure that you are using
+the same version of the game. Hopefully, game's client-server communication 
+protocol will be improved in future. All communication is made via UDP. 
+
+Please, report you problems with multiplayer.
+
 .SH EXAMPLES
 A good and easy mode to start playing:
 .IP
@@ -17,62 +260,15 @@ Or, on a smaller map:
 .IP
 .B curseofwar 
 -i4 -q1 -dee -W16 -H16
-.SH OPTIONS
-.TP
-\fB\-W\fR width
-Map width (default is 21)
-.TP
-\fB\-H\fR height
-Map height (default is 21)
-.TP
-\fB\-S\fR [rhombus|rect|hex]
-Map shape (rectangle is default). Max number of countries N=4 for rhombus and rectangle, and N=6 for the hexagon.
-.TP
-\fB\-l\fR [2|3| ... N]
-Sets L, the number of countries (default is N).
-.TP
-\fB\-i\fR [0|1|2|3|4]
-Inequality between the countries (0 is the lowest, 4 in the highest).
-.TP
-\fB\-q\fR [1|2| ... L]
-Choose player's location by its quality (1 = the best available on the map, L = the worst). Only in the singleplayer mode.
-.TP
-\fB\-r\fR
-Absolutely random initial conditions, overrides options \fB\-l\fR, \fB\-i\fR, and \fB\-q\fR.
-.TP
-\fB\-d\fR [ee|e|n|h|hh]
-Difficulty level (AI) from the easiest to the hardest (default is normal).
-.TP
-\fB\-s\fR [p|sss|ss|s|n|f|ff|fff]
-Game speed from the slowest to the fastest (default is normal).
-.TP
-\fB\-R\fR seed
-Specify a random seed (unsigned integer) for map generation.
-.TP
-\fB\-E\fR [1|2| ... L]
-Start a server for not more than L clients.
-.TP
-\fB\-e\fR port
-Server's port (19140 is default).
-.TP
-\fB\-C\fR IP
-Start a client and connect to the provided server's IP\-address.
-.TP
-\fB\-c\fR port
-Clients's port (19150 is default).
-.TP
-\fB\-h\fR
-Display this help
-.SH "SEE ALSO"
-Curse of War wiki and homepage: https://github.com/a-nikolaev/curseofwar/wiki
-.PP
-More info in README file
 .SH AUTORS
-.B
-Curseofwar author: 
-Alexey Nikolaev\n
+.B Game:
 .br
-.B
-Manpage author: 
-Anton Balashov <sicness@darklogic.ru>
-
+Alexey Nikolaev
+.br
+Kirill Dmitrenko <kdmitrenko at gmail dot com>
+.br
+.B Manpage:
+.br
+Anton Balashov <sicness at darklogic dot ru>
+.br
+Maximilian Dietrich <dxm at lavabit dot com>
