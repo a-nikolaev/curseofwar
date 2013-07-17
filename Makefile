@@ -33,7 +33,7 @@ $(EXEC): $(OBJS)
 install: all
 	$(INSTALL) -m 755 -D $(EXEC) $(BINDIR)/$(EXEC)
 	-mkdir -p $(MANDIR)
-	-sed "s/VERSION/$(VERSION)/g" $(EXEC).6 | gzip -c > $(MANDIR)/$(EXEC).6.gz
+	-sed "s/%VERSION%/$(VERSION)/g" $(EXEC).6 | gzip -c > $(MANDIR)/$(EXEC).6.gz
 	-chmod 644 $(MANDIR)/$(EXEC).6.gz
 
 install-strip:
