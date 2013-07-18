@@ -2,10 +2,10 @@
 SHELL = /bin/sh
 CC      = gcc
 INSTALL = install
-PREFIX ?= $(DESTDIR)/usr
+PREFIX ?= /usr
 MANPREFIX=$(PREFIX)/share/man
-BINDIR = $(PREFIX)/bin
-MANDIR = $(MANPREFIX)/man6
+BINDIR = $(DESTDIR)$(PREFIX)/bin
+MANDIR = $(DESTDIR)$(MANPREFIX)/man6
 
 SRCS    = $(wildcard *.c)
 HDRS    = $(wildcard *.h)
