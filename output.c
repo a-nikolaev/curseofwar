@@ -166,7 +166,7 @@ void output_grid(struct state *st, struct ui *ui, int ktime) {
         }
       }
       if (false && !b){
-        move(POSY(st,i,j), POSX(ui,i,j)-1);
+        move(POSY(ui,i,j), POSX(ui,i,j)-1);
         addstr("     "); 
       }
       // player 1 flags
@@ -189,7 +189,7 @@ void output_grid(struct state *st, struct ui *ui, int ktime) {
   /* print populations at the cursor */
   int p;
   char buf[32];
-  int y = POSY(st,0, st->grid.height) + 1;
+  int y = POSY(ui,0, st->grid.height) + 1;
   mvaddstr(y, 0, " Gold:");
   sprintf(buf, "%li    ", st->country[st->controlled].gold);
   attrset(player_style(st->controlled));
@@ -249,5 +249,33 @@ void output_grid(struct state *st, struct ui *ui, int ktime) {
   sprintf(buf, "%i-%02i-%02i ", year, month, day);
   mvaddstr(y, 72, buf);
 
+  refresh();
+}
+
+void output_dialog_quit_on(struct state *st, struct ui *ui) {
+  int y = POSY(ui,st->grid.width/2, st->grid.height/2) ;
+  int x = POSX(ui,st->grid.width/2, st->grid.height/2) - 8;
+  
+  attrset(A_NORMAL | COLOR_PAIR(1));
+  mvaddstr(y-2, x, "                 ");
+  mvaddstr(y-1, x, "   Quit? [Y/N]   ");
+  mvaddstr(y+0, x, "        [Q/Esc]  ");
+  mvaddstr(y+1, x, "                 ");
+  
+  int text_style = A_NORMAL | COLOR_PAIR(1);
+  int key_style = player_style(st->controlled);
+
+  output_key (y-1, x+9, "Y/N", key_style, "", text_style);
+  /* output_key (y+0, x+8, "Q/Esc", key_style, "", text_style); */
+  
+  attrset(A_NORMAL | COLOR_PAIR(1));
+  refresh();
+}
+
+void output_dialog_quit_off(struct state *st, struct ui *ui) {
+  int y = POSY(ui,st->grid.width/2, st->grid.height/2);
+  int x = POSX(ui,st->grid.width/2, st->grid.height/2) - 8;
+  mvaddstr(y-1, x, "                 ");
+  mvaddstr(y+0, x, "                 ");
   refresh();
 }

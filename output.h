@@ -34,5 +34,8 @@
 */
 void output_grid(struct state *st, struct ui *ui, int ktime);
 
+void output_dialog_quit_on(struct state *st, struct ui *ui);
+void output_dialog_quit_off(struct state *st, struct ui *ui);
+
 #endif
 

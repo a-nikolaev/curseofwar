@@ -581,6 +581,34 @@ int main(int argc, char* argv[]){
 /*                             SIGIO Signal Handler                          */
 /*****************************************************************************/
 
+int dialog_quit_confirm(struct state *st, struct ui *ui) {
+  output_dialog_quit_on(st, ui); 
+  int done = 0;
+  int finished = 0;
+  char buf[1];
+  while(!done) {
+    if ( fread(buf, 1, 1, stdin) == 1 ) {
+      char c = buf[0];
+      switch(c){
+        case 'y': case 'Y': case 'q': case 'Q':
+          finished = 1;
+          done = 1;
+          break;
+        case 'n': case 'N': case ESCAPE:
+          finished = 0;
+          done = 1;
+          break;
+        default:
+          break;
+      }
+    }
+    else
+      pause();
+  }
+  output_dialog_quit_off(st, ui); 
+  return finished;
+}
+
 int update_from_input( struct state *st, struct ui *ui )
 {
     int c;
@@ -595,7 +623,7 @@ int update_from_input( struct state *st, struct ui *ui )
         switch (c) {
             case 'Q':
             case 'q': 
-                finished = 1;                     /* quit program */
+                finished = dialog_quit_confirm(st, ui);                     /* quit program */
                 break;
             case 'f':
                 st->prev_speed = st->speed;
@@ -671,7 +699,13 @@ int update_from_input_client ( struct state *st, struct ui *ui, int sfd, struct 
 
     while ( fread(buf, 1, 1, stdin) == 1 ) {
       c = buf[0];
-      finished = client_process_input (st, ui, c, sfd, srv_addr);
+      switch (c){
+        case 'q': case 'Q':
+          finished = dialog_quit_confirm(st, ui);                     /* quit program */
+          break;
+        default:
+          finished = client_process_input (st, ui, c, sfd, srv_addr);
+      }
     }                
     return finished;
 }
