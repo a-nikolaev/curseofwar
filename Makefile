@@ -13,7 +13,7 @@ OBJS    = $(patsubst %.c,%.o,$(SRCS))
 EXEC   = curseofwar
 EXECS = $(EXEC)
 CFLAGS  += -Wall -O2
-LDFLAGS += -lncurses -lm 
+LDLIBS += -lncurses -lm 
 
 VERSION=`cat VERSION`
 
@@ -28,7 +28,7 @@ clean:
 	$(CC) $(CFLAGS) -c $(patsubst %.o,%.c,$@)
 
 $(EXEC): $(OBJS)
-	$(CC) $(CFLAGS) grid.o state.o king.o network.o output.o client.o server.o main.o $(LDFLAGS) -o $(EXEC)
+	$(CC) $(CFLAGS) $(LDFLAGS) grid.o state.o king.o network.o output.o client.o server.o main.o $(LDLIBS) -o $(EXEC)
 
 install: all
 	$(INSTALL) -m 755 -D $(EXEC) $(BINDIR)/$(EXEC)

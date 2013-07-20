@@ -1,5 +1,5 @@
 new
-  * Moved $(LDFLAGS) after object-files in Makefile
+  * Separated $(LDFLAGS) and $(LDLIBS) in Makefile
 
 version 1.1.5 2013-07-20
   * Quit confirmation dialog for singleplayer and multiplayer client.
