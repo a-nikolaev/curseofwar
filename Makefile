@@ -28,7 +28,7 @@ clean:
 	$(CC) $(CFLAGS) -c $(patsubst %.o,%.c,$@)
 
 $(EXEC): $(OBJS)
-	$(CC) $(CFLAGS) -o $(EXEC) grid.o state.o king.o network.o output.o client.o server.o main.o $(LDFLAGS)
+	$(CC) $(CFLAGS) $(LDFLAGS) grid.o state.o king.o network.o output.o client.o server.o main.o -o $(EXEC)
 
 install: all
 	$(INSTALL) -m 755 -D $(EXEC) $(BINDIR)/$(EXEC)
