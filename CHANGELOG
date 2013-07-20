@@ -1,11 +1,12 @@
-new
-  * Separated $(LDFLAGS) and $(LDLIBS) in Makefile
+version 1.1.6 2013-07-20
+  * Separated $(LDFLAGS) and $(LDLIBS) in Makefile (fixed compilation error in Arch Linux)
 
 version 1.1.5 2013-07-20
   * Quit confirmation dialog for singleplayer and multiplayer client.
   * Added max map size to manpage
   * According to changelog standards, '-' points were changed to '*'
   * Fix lintian warning: "hyphen-used-as-minus-sign" in manpage
+  * Moved $(LDFLAGS) and -o $@
 
 version 1.1.4 2013-07-17
   * improved man page, automated version number substitution
