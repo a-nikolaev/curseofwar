@@ -218,14 +218,14 @@ Q        quit
 To start a server for two players:
 .IP
 .B curseofwar
--E 2
+\-E 2
 .PP
 To start a client and connect to the server:
 .IP
 .B curseofwar
--C <server's IP> 
+\-C <server's IP> 
 .PP
-To specify ports, use -e option for server's port, and -c option for 
+To specify ports, use \-e option for server's port, and \-c option for 
 client's port. By default, servers are using port 19140, and clients are 
 using port 19150.
 
@@ -233,17 +233,17 @@ using port 19150.
   Start a server for a single client using port 11111
 .IP
 .B curseofwar
--E 1 -e 11111
+\-E 1 \-e 11111
 .PP
   To connect to it:
 .IP
 .B curseofwar
--C <server's IP> -e 11111
+\-C <server's IP> \-e 11111
 .PP
   Alternatively, to connect to it using port 12345 on the client's side:
 .IP
 .B curseofwar
--C <server's IP> -c 12345 -e 11111
+\-C <server's IP> \-c 12345 \-e 11111
 .PP
 Note that all needed map options must be setup when you start a server, 
 the map and other data are transmitted to clients, once they are connected.
@@ -253,7 +253,7 @@ the map and other data are transmitted to clients, once they are connected.
   conditions for all:
 .IP
 .B curseofwar
--E3 -l3 -S hex -i0 
+\-E3 \-l3 \-S hex \-i0 
 .PP
 Game speed cannot be changed by a client, so it must be set initially by 
 the server. Not all data is sent to clients (e.g. info about population is 
@@ -270,12 +270,12 @@ Please, report you problems with multiplayer.
 A good and easy mode to start playing:
 .IP
 .B curseofwar 
--i4 -q1 -dee
+\-i4 \-q1 \-dee
 .PP
 Or, on a smaller map:
 .IP
 .B curseofwar 
--i4 -q1 -dee -W16 -H16
+\-i4 \-q1 \-dee \-W16 \-H16
 .SH AUTHORS
 .B Game:
 .br
