@@ -1,0 +1,8 @@
+?package(curseofwar):\
+	needs="text" \
+        command="/usr/bin/curseofwar" \
+	hints="Strategy,Fast-paced action" \
+	longtitle="Fast-paced action strategy game" \
+        section="Games/Strategy" \
+	title="Curse of War (console)" \
+	icon="/usr/share/pixmaps/curseofwar-32x32.xpm"
