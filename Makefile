@@ -25,7 +25,7 @@ clean:
 	-rm -f $(OBJS) $(EXECS)
 
 %.o: %.c $(HDRS)
-	$(CC) $(CFLAGS) -c $(patsubst %.o,%.c,$@)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $(patsubst %.o,%.c,$@)
 
 $(EXEC): $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) grid.o state.o king.o network.o output.o client.o server.o main.o $(LDLIBS) -o $(EXEC)
