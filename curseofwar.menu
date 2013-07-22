@@ -1,7 +1,7 @@
 ?package(curseofwar):\
 	needs="text" \
         command="/usr/bin/curseofwar" \
-	hints="Strategy,fast-paced,action,terminal,ncurses" \
+	hints="Strategy,Fast-paced,Action,Terminal,ncurses" \
 	longtitle="A fast-paced action strategy game" \
         section="Games/Strategy" \
 	title="Curse of War (console)" \
