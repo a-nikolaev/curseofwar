@@ -88,6 +88,8 @@ void print_help() {
     "\tGame speed from the slowest to the fastest (default is normal).\n\n"
     "-R seed\n"
     "\tSpecify a random seed (unsigned integer) for map generation.\n\n"
+    "-T\n"
+    "\tShow the timeline.\n\n"
     "-E [1|2| ... L]\n"
     "\tStart a server for not more than L clients.\n\n"
     "-e port\n"
@@ -163,11 +165,16 @@ void run (struct state *st, struct ui *ui) {
       if (k % slowdown == 0 && st->speed != sp_pause) { 
         kings_move(st);
         simulate(st);
-        if (st->time%10 == 0)
-          update_timeline(st);
+        if (st->show_timeline) {
+          if (st->time%10 == 0)
+            update_timeline(st);
+        }
       }
       output_grid(st, ui, k);
-      output_timeline(st, ui);
+      if (st->show_timeline) {
+        if (st->time%10 == 0)
+          output_timeline(st, ui);
+      }
       time_to_redraw = 0;
 
       if (k%100 == 0) win_or_lose(st, k);
@@ -330,6 +337,7 @@ int main(int argc, char* argv[]){
   unsigned int seed_val = rand();
   int conditions_val = 0;
   int conditions_were_set = 0;
+  int timeline_flag = 0;
 
   int ineq_val = RANDOM_INEQUALITY;
   enum stencil shape_val = st_rect;
@@ -346,9 +354,10 @@ int main(int argc, char* argv[]){
 
   opterr = 0;
   int c;
-  while ((c = getopt (argc, argv, "hrW:H:i:l:q:d:s:R:S:E:e:C:c:")) != -1){
+  while ((c = getopt (argc, argv, "hrTW:H:i:l:q:d:s:R:S:E:e:C:c:")) != -1){
     switch(c){
       case 'r': r_flag = 1; break;
+      case 'T': timeline_flag = 1; break;
       //case 'f': f_val = optarg; break;
       case 'W': { char* endptr = NULL;
                   w_val = MAX(14, strtol(optarg, &endptr, 10));
@@ -533,7 +542,7 @@ int main(int argc, char* argv[]){
   mvaddstr(0,0,"Map is generated. Please wait.");
   refresh();
 
-  state_init(&st, w_val, h_val, shape_val, seed_val, r_flag, l_val, val_clients_num, conditions_val, ineq_val, sp_val, dif_val);
+  state_init(&st, w_val, h_val, shape_val, seed_val, r_flag, l_val, val_clients_num, conditions_val, ineq_val, sp_val, dif_val, timeline_flag);
  
   ui_init(&st, &ui);
 

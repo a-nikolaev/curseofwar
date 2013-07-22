@@ -1,3 +1,6 @@
+new
+  * Added timeline plot showing populations of the countries (with option -T)
+
 version 1.1.7 2013-07-22
   * Icons 32x32 and 16x16
   * Fix Hardening problem

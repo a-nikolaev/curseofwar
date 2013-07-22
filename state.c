@@ -47,7 +47,8 @@ enum config_speed slower(enum config_speed sp){
 
 void state_init(struct state *s, int w, int h, enum stencil shape,
     unsigned int map_seed, int keep_random, int locations_num, int clients_num, 
-    int conditions, int inequality, enum config_speed speed, enum config_dif dif){
+    int conditions, int inequality, enum config_speed speed, enum config_dif dif,
+    int timeline_flag){
  
   s->speed = speed;
   s->prev_speed = s->speed;
@@ -135,6 +136,7 @@ void state_init(struct state *s, int w, int h, enum stencil shape,
   }
 
   /* Zero timeline */
+  s->show_timeline = timeline_flag;
   s->timeline.mark = -1;
   for(i=0; i<MAX_TIMELINE_MARK; ++i) {
     s->timeline.time[i] = s->time;

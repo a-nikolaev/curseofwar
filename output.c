@@ -48,6 +48,17 @@ int player_style(int p) {
    return A_NORMAL | COLOR_PAIR(player_color(p));
 }
 
+void time_to_ymd(unsigned long time, int *y, int *m, int *d) {
+  int year = time/360;
+  int month = time - year*360;
+  int day = month%30 + 1;
+  month = month / 30 + 1;
+
+  *y = year;
+  *m = month;
+  *d = day;
+}
+
 /* Outputs population at the tile (i,j) */
 void output_units(struct ui *ui, struct tile *t, int i, int j) {
   int p;
@@ -242,10 +253,8 @@ void output_grid(struct state *st, struct ui *ui, int ktime) {
   
   mvaddstr(y, 65, "Date:");
   attrset(key_style);
-  int year = st->time/360;
-  int month = st->time - year*360;
-  int day = month%30 + 1;
-  month = month / 30 + 1;
+  int year, month, day;
+  time_to_ymd(st->time, &year, &month, &day);
   sprintf(buf, "%i-%02i-%02i ", year, month, day);
   mvaddstr(y, 72, buf);
 
@@ -280,7 +289,29 @@ void output_dialog_quit_off(struct state *st, struct ui *ui) {
   refresh();
 }
 
-#define TIMELINE_HEIGHT 8
+
+
+#define TIMELINE_HEIGHT 5
+/* helper function to output sorted values */
+void insert_position(int pl[TIMELINE_HEIGHT], float val[TIMELINE_HEIGHT], int i, int p, float v) {
+  if (i>=TIMELINE_HEIGHT) return;
+
+  if (pl[i] == 0) {
+    pl[i] = p;
+    val[i] = v;
+  }
+  else {
+    if (val[i] >= v) { 
+      insert_position(pl, val, i+1, p, v);
+    }
+    else {
+      int tp = pl[i]; float tv = val[i];
+      pl[i] = p; val[i] = v;
+      insert_position(pl, val, i+1, tp, tv);
+    }
+  }
+}
+
 void output_timeline(struct state *st, struct ui *ui) {
   struct timeline *t = &st->timeline;
   int non_zero[MAX_PLAYER];
@@ -324,19 +355,44 @@ void output_timeline(struct state *st, struct ui *ui) {
 
   /* clean plotting area */
   int j;
-  for(j=0; j<TIMELINE_HEIGHT; ++j) {
+  for(j=0; j<TIMELINE_HEIGHT+1; ++j) {
     move(y0+j, x0);
-    for(i=0; i<MAX_TIMELINE_MARK; ++i) {
+    for(i=0; i<MAX_TIMELINE_MARK + 15; ++i) {
       addch(' ');
     }
   }
   
+  /*
   mvaddch(y0, x0-1, '/');
   mvaddch(y0+TIMELINE_HEIGHT-1, x0-1, '\\');
+  */
+  
+  /* add dates */
+  int y1, m1, d1;
+  int y2, m2, d2;
+  int x_shift_year = -1;
+  
+  char buf[20];
+  
+  attrset(A_NORMAL | COLOR_PAIR(1));
+  for(i=1-x_shift_year; i<=t->mark; ++i) {
+    time_to_ymd(t->time[i-1], &y1, &m1, &d1);
+    time_to_ymd(t->time[i], &y2, &m2, &d2);
+    if (y1 < y2) {
+      sprintf(buf, "%i", y2);
+      mvaddstr(y0+TIMELINE_HEIGHT-1+1, x0+i+x_shift_year, buf);
+      
+      for(j=0; j<TIMELINE_HEIGHT-1; ++j) {
+        mvaddch(y0+j, x0+i, '.');
+      }
+    }
+  }
 
+  /* plotting */
   int dy;
   int dx;
   int pp;
+  int store_pl_row[MAX_PLAYER];
   for(i=0; i<=t->mark; ++i) {
     char c = '-';
     for(pp=0; pp<=MAX_PLAYER; ++pp) {
@@ -347,18 +403,41 @@ void output_timeline(struct state *st, struct ui *ui) {
         dx = i;
         v = (int) round( (TIMELINE_HEIGHT-1) * (t->data[p][i] - min) * one_over_delta );
         dy = TIMELINE_HEIGHT-1 - v;
-
-
+        dy = IN_SEGMENT(dy, 0, TIMELINE_HEIGHT-1);
+        if (i==t->mark) /* save the row for later use */
+          store_pl_row[p] = dy; /* 0 = maximum, TIMELINE_HEIGHT-1 = minimum */
         mvaddch(y0+dy, x0+dx, c);
       }
     } 
   }
   attrset(A_NORMAL | COLOR_PAIR(1));
 
-  char buf[20];
-  sprintf(buf, "%i", (int)max);
+  sprintf(buf, "%g", max);
   mvaddstr(y0, x0, buf);
-  sprintf(buf, "%i", (int)min);
+  sprintf(buf, "%g", min);
   mvaddstr(y0+TIMELINE_HEIGHT-1, x0, buf);
+  
+
+  /* add values */
+  int pl_arr[TIMELINE_HEIGHT];
+  float val_arr[TIMELINE_HEIGHT];
+  for(i=0; i<TIMELINE_HEIGHT; ++i) {
+    pl_arr[i] = 0;
+    val_arr[i] = 0.0;
+  }
+  for (p=1; p<MAX_PLAYER; ++p) {
+    if (non_zero[p])
+      insert_position(pl_arr, val_arr, store_pl_row[p], p, t->data[p][t->mark]);
+  }
+  for (i=0; i<TIMELINE_HEIGHT; ++i) {
+    if (pl_arr[i] != 0) {
+      dx = t->mark + 3;
+      dy = i;
+      sprintf(buf, "%g", val_arr[i]);
+      attrset(player_style(pl_arr[i]));
+      mvaddstr(y0+dy, x0+dx, buf);
+    }
+  }
+  attrset(A_NORMAL | COLOR_PAIR(1));
 
 }

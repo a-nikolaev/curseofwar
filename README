@@ -68,6 +68,9 @@ Command line arguments
   -R seed
     Specify a random seed (unsigned integer) for map generation.
 
+  -T 
+    Show the timeline.
+
   -E [1|2| ... L]
     Start a server for not more than L clients.
 

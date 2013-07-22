@@ -78,6 +78,7 @@ struct state {
   int kings_num;
 
   struct timeline timeline;
+  int show_timeline;
 
   struct country country [MAX_PLAYER];
 
@@ -109,7 +110,8 @@ struct state {
  */
 void state_init(struct state *s, int w, int h, enum stencil shape,
     unsigned int map_seed, int keep_random, int locations_num, int clients_num,
-    int conditions, int inequality, enum config_speed speed, enum config_dif dif);
+    int conditions, int inequality, enum config_speed speed, enum config_dif dif,
+    int timeline_flag);
 
 /* compute the cursor location, and xskip */
 void ui_init(struct state *s, struct ui *ui);
