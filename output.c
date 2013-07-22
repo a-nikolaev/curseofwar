@@ -279,3 +279,86 @@ void output_dialog_quit_off(struct state *st, struct ui *ui) {
   mvaddstr(y+0, x, "                 ");
   refresh();
 }
+
+#define TIMELINE_HEIGHT 8
+void output_timeline(struct state *st, struct ui *ui) {
+  struct timeline *t = &st->timeline;
+  int non_zero[MAX_PLAYER];
+
+  int p, i;
+  int v;
+  for(p=0; p<MAX_PLAYER; ++p) {
+    non_zero[p] = 0;
+    for(i=0; i<=t->mark; ++i) {
+      v = t->data[p][i];
+      if (v >= 0.1) non_zero[p] = 1;
+    }
+  }
+  
+  float max=0.0;
+  float min=0.0;
+  
+  for(p=0; p<MAX_PLAYER; ++p) {
+    if (non_zero[p]) {
+      max = t->data[p][0];
+      min = max;
+    }
+  }
+  
+  for(p=0; p<MAX_PLAYER; ++p) {
+    if (non_zero[p]) {
+      for(i=0; i<=t->mark; ++i) {
+        v = t->data[p][i];
+        if (v>max) max = v;
+        if (v<min) min = v;
+      }
+    }
+  }
+  
+  /* adjust when min is close to max */
+  if (max - min < 0.1) max = min + 0.1;
+  float one_over_delta = 1.0 / (max - min);
+
+  int y0 = POSY(ui,0, st->grid.height) + 8;
+  int x0 = 2;
+
+  /* clean plotting area */
+  int j;
+  for(j=0; j<TIMELINE_HEIGHT; ++j) {
+    move(y0+j, x0);
+    for(i=0; i<MAX_TIMELINE_MARK; ++i) {
+      addch(' ');
+    }
+  }
+  
+  mvaddch(y0, x0-1, '/');
+  mvaddch(y0+TIMELINE_HEIGHT-1, x0-1, '\\');
+
+  int dy;
+  int dx;
+  int pp;
+  for(i=0; i<=t->mark; ++i) {
+    char c = '-';
+    for(pp=0; pp<=MAX_PLAYER; ++pp) {
+      p = (pp+i) % MAX_PLAYER;
+      if (pp == MAX_PLAYER) {p = st->controlled; c = '*';}
+      if (non_zero[p]) {
+        attrset(player_style(p));
+        dx = i;
+        v = (int) round( (TIMELINE_HEIGHT-1) * (t->data[p][i] - min) * one_over_delta );
+        dy = TIMELINE_HEIGHT-1 - v;
+
+
+        mvaddch(y0+dy, x0+dx, c);
+      }
+    } 
+  }
+  attrset(A_NORMAL | COLOR_PAIR(1));
+
+  char buf[20];
+  sprintf(buf, "%i", (int)max);
+  mvaddstr(y0, x0, buf);
+  sprintf(buf, "%i", (int)min);
+  mvaddstr(y0+TIMELINE_HEIGHT-1, x0, buf);
+
+}

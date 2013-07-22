@@ -30,6 +30,8 @@
 
 #define MAX_POP 499   /* maximum polulation at a tile (for each player) */
 
+#define MAX_TIMELINE_MARK 72
+
 #define MIN(x,y) (x<y)?(x):(y)
 #define MAX(x,y) (x<y)?(y):(x)
 #define IN_SEGMENT(x,l,r) (((x)<(l))?(l) : ( ((x)>(r))?(r):(x) ))

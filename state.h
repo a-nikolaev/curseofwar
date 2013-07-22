@@ -39,6 +39,16 @@ struct ui {
   int xskip;
 };
 
+/* struct timeline */
+struct timeline {
+  float data[MAX_PLAYER][MAX_TIMELINE_MARK];  /* stored data */
+  unsigned long int time[MAX_TIMELINE_MARK];  /* time when data was recorded */
+  int mark; /* the most recently updated time mark.
+               It can be used as index in two other fields, i.e.
+               0 <= mark < MAX_TIMELINE_MARK */
+};
+
+
 /*
   struct state
     
@@ -66,6 +76,8 @@ struct state {
   struct flag_grid fg [MAX_PLAYER];
   struct king king [MAX_PLAYER];
   int kings_num;
+
+  struct timeline timeline;
 
   struct country country [MAX_PLAYER];
 
@@ -113,5 +125,10 @@ void kings_move(struct state *s);
     Performs one step of the game simulation
  */
 void simulate(struct state *s);
+
+/*
+  update_timeline(&s)
+ */
+void update_timeline(struct state *s);
 
 #endif

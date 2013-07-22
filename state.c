@@ -133,6 +133,15 @@ void state_init(struct state *s, int w, int h, enum stencil shape,
   for(p = 0; p < s->kings_num; ++p) {
     king_evaluate_map(&s->king[p], &s->grid, dif);
   }
+
+  /* Zero timeline */
+  s->timeline.mark = -1;
+  for(i=0; i<MAX_TIMELINE_MARK; ++i) {
+    s->timeline.time[i] = s->time;
+    for(p=0; p<MAX_PLAYER; ++p) {
+      s->timeline.data[p][i] = 0.0;
+    }
+  }
 }
 
 
@@ -362,4 +371,38 @@ void simulate(struct state *s) {
     if (i != NEUTRAL && i != s->controlled && s->country[i].gold>0)
       s->country[i].gold += add_gold; 
   }
+}
+
+
+void update_timeline(struct state *s) {
+  /* shortcut notation */
+  struct timeline *t = &s->timeline;
+  int p, i, j;
+
+  /* prepare to update */
+  if (t->mark+1 < MAX_TIMELINE_MARK)
+    t->mark += 1; 
+  else {
+    /* shift all recorded data to empty space */
+    for(i=0; i<MAX_TIMELINE_MARK-1; ++i) {
+      t->time[i] = t->time[i+1];
+      for(p=0; p<MAX_PLAYER; ++p) {
+        t->data[p][i] = t->data[p][i+1];
+      }
+    }
+  }
+  
+  /* insert a new datapoint at position t->mark */
+  t->time[t->mark] = s->time;
+  /* we compute total population here */
+  for (p=0; p<MAX_PLAYER; ++p) {
+    int count = 0;
+    for (i=0; i<MAX_WIDTH; ++i) {
+      for (j=0; j<MAX_HEIGHT; ++j) {
+        count += s->grid.tiles[i][j].units[p][citizen];
+      }
+    }
+    t->data[p][t->mark] = (float)count; 
+  }
+  /* call output_timeline to print it out */
 }

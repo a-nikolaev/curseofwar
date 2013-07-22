@@ -163,8 +163,11 @@ void run (struct state *st, struct ui *ui) {
       if (k % slowdown == 0 && st->speed != sp_pause) { 
         kings_move(st);
         simulate(st);
+        if (st->time%10 == 0)
+          update_timeline(st);
       }
       output_grid(st, ui, k);
+      output_timeline(st, ui);
       time_to_redraw = 0;
 
       if (k%100 == 0) win_or_lose(st, k);
