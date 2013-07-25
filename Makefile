@@ -2,6 +2,7 @@ SHELL = /bin/sh
 CC      = gcc
 INSTALL = install
 EXEC   = curseofwar
+EXEC_SDL = curseofwar-sdl
 
 PREFIX ?= /usr
 MANPREFIX = $(PREFIX)/share/man
@@ -17,6 +18,9 @@ EXECS = $(EXEC)
 CFLAGS  += -Wall -O2
 LDLIBS += -lncurses -lm 
 
+CFLAGS_SDL = $(shell sdl-config --cflags)
+LDLIBS_SDL = $(shell sdl-config --libs)
+
 VERSION=`cat VERSION`
 
 .PHONY: all clean cleanall
@@ -31,6 +35,10 @@ clean:
 
 $(EXEC): $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) grid.o state.o king.o network.o output.o client.o server.o main.o $(LDLIBS) -o $(EXEC)
+
+$(EXEC_SDL): $(OBJS)
+	$(CC) $(CFLAGS) $(CFLAGS_SDL) $(LDFLAGS) \
+		grid.o state.o king.o network.o client.o server.o main-sdl.o $(LDLIBS) $(LDLIBS_SDL) -o $(EXEC_SDL)
 
 install: all
 	$(INSTALL) -m 755 -D $(EXEC) $(BINDIR)/$(EXEC)
