@@ -11,11 +11,23 @@ BINDIR = $(DESTDIR)$(PREFIX)/bin
 MANDIR = $(DESTDIR)$(MANPREFIX)/man6
 DOCDIR = $(DESTDIR)$(PREFIX)/share/doc/$(EXEC)
 
+SRCS_INDEP = grid.c state.c king.c network.c client.c server.c output-common.c main-common.c
+SRCS_NCURSES = output.c main.c 
+SRCS_SDL = output-sdl.c main-sdl.c
+
+HDRS_INDEP = common.h messaging.h $(patsubst %.c,%.h,$(SRCS_INDEP))
+HDRS_NCURSES = output.h
+HDRS_SDL = output-sdl.h
+
+OBJS_INDEP = $(patsubst %.c,%.o,$(SRCS_INDEP))
+OBJS_NCURSES = $(patsubst %.c,%.o,$(SRCS_NCURSES))
+OBJS_SDL = $(patsubst %.c,%.o,$(SRCS_SDL))
+
 SRCS    = $(wildcard *.c)
 HDRS    = $(wildcard *.h)
 OBJS    = $(patsubst %.c,%.o,$(SRCS))
-EXECS = $(EXEC)
-CFLAGS  += -Wall -O2
+EXECS = $(EXEC) $(EXEC_SDL)
+CFLAGS += -Wall -O2
 LDLIBS += -lncurses -lm 
 
 CFLAGS_SDL = $(shell sdl-config --cflags)
@@ -27,18 +39,25 @@ VERSION=`cat VERSION`
 
 all: $(EXEC)
 
-clean:
-	-rm -f $(OBJS) $(EXECS)
+sdl: $(EXEC_SDL)
 
-%.o: %.c $(HDRS)
+clean:
+	-rm -f $(OBJS_INDEP) $(OBJS_NCURSES) $(OBJS_SDL) $(EXECS)
+
+$(OBJS_INDEP): $(patsubst %.o,%.c,$@) $(HDRS_INDEP)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $(patsubst %.o,%.c,$@)
 
-$(EXEC): $(OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) grid.o state.o king.o network.o output.o client.o server.o main.o $(LDLIBS) -o $(EXEC)
+$(OBJS_NCURSES): $(patsubst %.o,%.c,$@) $(HDRS_INDEP) $(HDRS_NCURSES)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $(patsubst %.o,%.c,$@)
 
-$(EXEC_SDL): $(OBJS)
-	$(CC) $(CFLAGS) $(CFLAGS_SDL) $(LDFLAGS) \
-		grid.o state.o king.o network.o client.o server.o main-sdl.o $(LDLIBS) $(LDLIBS_SDL) -o $(EXEC_SDL)
+$(OBJS_SDL): $(patsubst %.o,%.c,$@) $(HDRS_INDEP) $(HDRS_SDL)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(CFLAGS_SDL) -c $(patsubst %.o,%.c,$@)
+
+$(EXEC): $(OBJS_INDEP) $(OBJS_NCURSES)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS_INDEP) $(OBJS_NCURSES) $(LDLIBS) -o $(EXEC)
+
+$(EXEC_SDL): $(OBJS_INDEP) $(OBJS_SDL)
+	$(CC) $(CFLAGS) $(CFLAGS_SDL) $(LDFLAGS) $(OBJS_INDEP) $(OBJS_SDL) $(LDLIBS) $(LDLIBS_SDL) -o $(EXEC_SDL)
 
 install: all
 	$(INSTALL) -m 755 -D $(EXEC) $(BINDIR)/$(EXEC)

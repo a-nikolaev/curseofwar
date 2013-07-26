@@ -1,118 +1,103 @@
+/******************************************************************************
+
+  Curse of War -- Real Time Strategy Game for Linux.
+  Copyright (C) 2013 Alexey Nikolaev.
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ 
+******************************************************************************/
+
 #include <stdlib.h>
 #include <time.h>
 #include "SDL.h"
 
-#define SCREEN_WIDTH 1000
+#define SCREEN_WIDTH 1024
 #define SCREEN_HEIGHT 480 
 
 #include "grid.h"
 #include "common.h"
+#include "state.h"
+#include "output-sdl.h"
+#include "main-common.h"
 
-#define TILE_WIDTH 32
-#define TILE_HEIGHT 16
-void blit_subpic(SDL_Surface *src_surf, SDL_Surface *dst_surf, int srci, int srcj, int dsti, int dstj) {
-  static SDL_Rect src, dest;
-   
-  src.x = srci * TILE_WIDTH;
-  src.y = srcj * TILE_HEIGHT;
-  src.w = TILE_WIDTH;
-  src.h = TILE_HEIGHT;
-   
-  dest.x = dsti * TILE_WIDTH + dstj*(TILE_WIDTH/2);
-  dest.y = dstj * TILE_HEIGHT;
-  dest.w = TILE_WIDTH;
-  dest.h = TILE_HEIGHT;
-   
-  SDL_BlitSurface(src_surf, &src, dst_surf, &dest);
-}
+/* delay in milliseconds */
+#define TIME_DELAY 10
 
-/* double height tile */
-void blit_subpic_2h(SDL_Surface *src_surf, SDL_Surface *dst_surf, int srci, int srcj, int dsti, int dstj) {
-  static SDL_Rect src, dest;
-   
-  src.x = srci * TILE_WIDTH;
-  src.y = srcj * TILE_HEIGHT - TILE_HEIGHT;
-  src.w = TILE_WIDTH;
-  src.h = TILE_HEIGHT*2;
-   
-  dest.x = dsti * TILE_WIDTH + dstj*(TILE_WIDTH/2);
-  dest.y = dstj * TILE_HEIGHT - TILE_HEIGHT;
-  dest.w = TILE_WIDTH;
-  dest.h = TILE_HEIGHT*2;
-   
-  SDL_BlitSurface(src_surf, &src, dst_surf, &dest);
-}
+void run(struct state *st, struct ui *ui, SDL_Surface *screen, SDL_Surface *tileset){
+  /* tile variation */
+  int tile_variant[MAX_WIDTH][MAX_HEIGHT];
+  int pop_variant[MAX_WIDTH][MAX_HEIGHT];
+  int i, j;
+  for (i=0; i<MAX_WIDTH; ++i)
+    for (j=0; j<MAX_HEIGHT; ++j) {
+      tile_variant[i][j] = rand();
+      pop_variant[i][j] = rand();
+    }
 
-void output_sdl (SDL_Surface *tileset, SDL_Surface *screen, struct grid *g, int variant[MAX_WIDTH][MAX_HEIGHT]) {
-  int i,j;
-  int srci=0, srcj=0;
-  for (j=0; j<g->height; ++j) {
-    for (i=0; i<g->width; ++i) {
-      
-      switch (g->tiles[i][j].cl) {
-        /* case abyss: break; */
-        default:
-          /* draw grass */
-          blit_subpic (tileset, screen, 0 + variant[i][j]%6, 0 + variant[i][j]/6%3, i, j+1);
-          /* draw everything else */
-          switch (g->tiles[i][j].cl) {
-            case village: 
-              srci=0; srcj=7; break;
-            case town: 
-              srci=1; srcj=7; break;
-            case castle: 
-              srci=2; srcj=7; break;
-            case mountain: case mine:
-              srci=0 + variant[i][j]%4; 
-              srcj=5; break;
-            case grassland:
-              if (variant[i][j] % 2 == 0) continue;
-              srci = 0 + (variant[i][j]/2)%9;
-              srcj = 8;
-              blit_subpic (tileset, screen, srci, srcj, i, j+1);
-              continue;
-            default:
-              continue;
-          }
-          blit_subpic_2h (tileset, screen, srci, srcj, i, j+1);
-          if (g->tiles[i][j].cl == mine) {
-            blit_subpic_2h (tileset, screen, 5, 5, i, j+1);
-          }
+  int finished = 0;
+  SDL_Event event;
+  int previous_time = SDL_GetTicks();
+
+  int k = 0;
+  while (!finished){
+
+    int time = SDL_GetTicks();
+
+    if (time - previous_time >= TIME_DELAY) {
+
+      previous_time = previous_time + TIME_DELAY;
+      k++;
+      if (k>=1600) k=0;
+
+      char c = '\0';
+      while (!finished && SDL_PollEvent(&event)){
+        switch (event.type){
+          case SDL_KEYDOWN:
+            c = '\0';
+            switch (event.key.keysym.sym) {
+              case SDLK_LEFT: c = 'h'; break;
+              case SDLK_RIGHT: c = 'l'; break;
+              case SDLK_UP: c = 'k'; break;
+              case SDLK_DOWN: c = 'j'; break;
+              case SDLK_q: c = 'q'; break;
+              case SDLK_SPACE: c = ' '; break;
+              default:
+                if ( (event.key.keysym.unicode & 0xFF80) == 0 ) {
+                  c = event.key.keysym.unicode & 0x7F;
+                }
+            }
+            finished = singleplayer_process_input(st, ui, c);
+            break;
+        }
       }
+
+      int slowdown = game_slowdown(st->speed);
+      if (k % slowdown == 0 && st->speed != sp_pause) { 
+        kings_move(st);
+        simulate(st);
+      }
+
+      if (k % 5 == 0) {
+        output_sdl(tileset, screen, st, ui, tile_variant, pop_variant, k);
+        SDL_Flip(screen);
+      }
+    }
+    else{
+      SDL_Delay(TIME_DELAY/2);
     }
   }
 }
-
-Uint32 getpixel(SDL_Surface *surface, int x, int y) {
-  int bpp = surface->format->BytesPerPixel;
-  /* Here p is the address to the pixel we want to retrieve */
-  Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
-
-  switch(bpp) {
-    case 1:
-      return *p;
-      break;
-
-    case 2:
-      return *(Uint16 *)p;
-      break;
-
-    case 3:
-      if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
-        return p[0] << 16 | p[1] << 8 | p[2];
-      else
-        return p[0] | p[1] << 8 | p[2] << 16;
-      break;
-
-    case 4:
-      return *(Uint32 *)p;
-      break;
-
-    default:
-      return 0;       /* shouldn't happen, but avoids warnings */
-  }
-}
-
 
 int main(int argc, char *argv[]) {
 
@@ -131,8 +116,11 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
+  SDL_EnableUNICODE(1);
+  SDL_EnableKeyRepeat(300, 30);
+
   /* Load Image */
-  SDL_Surface *image;
+  SDL_Surface *tileset;
   SDL_Surface *temp;
    
   temp = SDL_LoadBMP("../draw/tileset.bmp");
@@ -150,52 +138,74 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Warning: colorkey will not be used, reason: %s\n", SDL_GetError());
   }
    
-  image = SDL_DisplayFormat(temp);
+  tileset = SDL_DisplayFormat(temp);
   SDL_FreeSurface(temp);
 
-  /*
-  SDL_Rect src, dest;
-   
-  src.x = 0;
-  src.y = 0;
-  src.w = image->w;
-  src.h = image->h;
-   
-  dest.x = 100;
-  dest.y = 100;
-  dest.w = image->w;
-  dest.h = image->h;
-   
-  SDL_BlitSurface(image, &src, screen, &dest);
-  SDL_Flip(screen);
-  */
+  /* Parse argv */
+  int r_flag = 0; // random
+  int dif_val = dif_normal; // diffiulty
+  int sp_val = sp_normal; // speed
+  int w_val = 21; // width
+  int h_val = 21; // height
+  int l_val = 0;  // the number of starting locations
+  unsigned int seed_val = rand();
+  int conditions_val = 0;
+  int conditions_were_set = 0;
+  int timeline_flag = 0;
 
-  /* make a map */
-  struct grid g;
-  grid_init(&g, 20, 20);
-  int tile_variant[MAX_WIDTH][MAX_HEIGHT];
-  int i, j;
-  for (i=0; i<MAX_WIDTH; ++i)
-    for (j=0; j<MAX_HEIGHT; ++j)
-        tile_variant[i][j] = rand();
+  int ineq_val = RANDOM_INEQUALITY;
+  enum stencil shape_val = st_rhombus;
 
-  int done = 0;
-  SDL_Event event;
-  while (!done){
-    while (!done && SDL_PollEvent(&event)){
-      switch (event.type){
-        case SDL_KEYDOWN:
-          done = 1;
-          break;
-      }
+  /* multiplayer option */
+  int multiplayer_flag = 0;
+  int server_flag = 1;
+  
+  char* val_client_port = strdup(DEF_CLIENT_PORT);
+  char* val_server_addr = strdup(DEF_SERVER_ADDR);
+  char* val_server_port = strdup(DEF_SERVER_PORT);
+  int val_clients_num = 1;
+
+  
+  /* Adjust l_val and conditions_val */
+  {
+    int avlbl_loc_num = stencil_avlbl_loc_num (shape_val);
+    if(l_val == 0) l_val = avlbl_loc_num;
+
+    if (l_val < 2 || l_val > avlbl_loc_num) {
+      return 1;
     }
-    
-    output_sdl(image, screen, &g, tile_variant);
+    if (conditions_were_set && (conditions_val<1 || conditions_val>l_val)) {
+      return 1;
+    }
 
-    SDL_Flip(screen);
-    SDL_Delay(10);
+    if (val_clients_num < 1 || val_clients_num > l_val) {
+      return 1;
+    }
+
+    if (shape_val == st_rect) {
+      w_val = MIN(MAX_WIDTH-1, w_val+(h_val+1)/2);
+    }
   }
+  
+  
+  
+  struct state st;
+  struct ui ui;
 
-  SDL_FreeSurface(image);
+
+  state_init(&st, w_val, h_val, shape_val, seed_val, r_flag, l_val, val_clients_num, conditions_val, ineq_val, sp_val, dif_val, timeline_flag);
+  ui_init(&st, &ui);
+
+
+  run(&st, &ui, screen, tileset);
+
+  SDL_FreeSurface(tileset);
+  
+  if (!multiplayer_flag || server_flag)
+    printf ("Random seed was %i\n", st.map_seed);
+
+  free(val_server_addr);
+  free(val_server_port);
+  free(val_client_port);
   return 0;
 }
