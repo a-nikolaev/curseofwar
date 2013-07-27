@@ -28,6 +28,11 @@
 #define TILE_WIDTH 32
 #define TILE_HEIGHT 16
 
+#define TYPE_WIDTH 14
+#define TYPE_HEIGHT 14
+#define TYPE_LINE_LENGTH 18
+#define TYPE_FIRST 33
+
 Uint32 getpixel(SDL_Surface *surface, int x, int y);
 
 void blit_subpic(SDL_Surface *src_surf, SDL_Surface *dst_surf, int srci, int srcj, int dsti, int dstj);
@@ -36,8 +41,11 @@ void blit_subpic_noise(SDL_Surface *src_surf, SDL_Surface *dst_surf, int srci, i
 
 void blit_subpic_2h(SDL_Surface *src_surf, SDL_Surface *dst_surf, int srci, int srcj, int dsti, int dstj);
 
-void output_sdl (SDL_Surface *tileset, SDL_Surface *screen, struct state *s, struct ui *ui,
-    int variant[MAX_WIDTH][MAX_HEIGHT], int pop_variant[MAX_WIDTH][MAX_HEIGHT], int ktime);
 
+void output_char(SDL_Surface *typeface, SDL_Surface *screen, char c, int dsti, int dstj);
+void output_string(SDL_Surface *typeface, SDL_Surface *screen, char *str, int dsti, int dstj);
+
+void output_sdl (SDL_Surface *tileset, SDL_Surface *typeface, SDL_Surface *screen, struct state *s, struct ui *ui,
+    int variant[MAX_WIDTH][MAX_HEIGHT], int pop_variant[MAX_WIDTH][MAX_HEIGHT], int ktime);
 
 #endif

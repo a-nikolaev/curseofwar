@@ -105,10 +105,41 @@ void blit_subpic_2h(SDL_Surface *src_surf, SDL_Surface *dst_surf, int srci, int 
   SDL_BlitSurface(src_surf, &src, dst_surf, &dest);
 }
 
+
+
+void output_char(SDL_Surface *typeface, SDL_Surface *screen, char c, int dstx, int dsty){
+  static SDL_Rect src, dest;
+  
+  int z = c - TYPE_FIRST;
+  int j = z / TYPE_LINE_LENGTH;
+  int i = z % TYPE_LINE_LENGTH;
+
+  src.x = i * TYPE_WIDTH;
+  src.y = j * TYPE_HEIGHT;
+  src.w = TYPE_WIDTH;
+  src.h = TYPE_HEIGHT;
+   
+  dest.x = dstx;
+  dest.y = dsty;
+  dest.w = TYPE_WIDTH;
+  dest.h = TYPE_HEIGHT;
+   
+  SDL_BlitSurface(typeface, &src, screen, &dest);
+}
+
+void output_string(SDL_Surface *typeface, SDL_Surface *screen, char *str, int dstx, int dsty){
+  int i=0;
+  while(str[i]!='\0') {
+    output_char(typeface, screen, str[i], dstx+i*TYPE_WIDTH, dsty);
+    i++;
+  }
+}
+
 #define POSY(j) ((j)+1)
 #define POSX(ui,i) ((i) - (ui->xskip))
 
-void output_sdl (SDL_Surface *tileset, SDL_Surface *screen, struct state *s, struct ui *ui,
+void output_sdl (SDL_Surface *tileset, SDL_Surface *typeface, SDL_Surface *screen, 
+    struct state *s, struct ui *ui,
     int variant[MAX_WIDTH][MAX_HEIGHT], int pop_variant[MAX_WIDTH][MAX_HEIGHT], int ktime) {
 
   /* Clear screen */
@@ -195,5 +226,12 @@ void output_sdl (SDL_Surface *tileset, SDL_Surface *screen, struct state *s, str
   blit_subpic_2h (tileset, screen, 6, 5, POSX(ui, ui->cursor.i-1), POSY(ui->cursor.j));
   blit_subpic_2h (tileset, screen, 7, 5, POSX(ui, ui->cursor.i), POSY(ui->cursor.j));
   blit_subpic_2h (tileset, screen, 8, 5, POSX(ui, ui->cursor.i+1), POSY(ui->cursor.j));
+
+  /* Text */
+  int screen_y = (POSY(s->grid.height) + 1) * TILE_HEIGHT;
+
+  char buf[128];
+  sprintf(buf, "Gold: %li     ", s->country[s->controlled].gold);
+  output_string(typeface, screen, buf, TILE_WIDTH, screen_y);
 
 }

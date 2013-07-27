@@ -1,8 +1,10 @@
 SHELL = /bin/sh
 CC      = gcc
 INSTALL = install
-EXEC   = curseofwar
+EXEC_NCURSES = curseofwar
 EXEC_SDL = curseofwar-sdl
+
+NAME_GENERIC = curseofwar
 
 PREFIX ?= /usr
 MANPREFIX = $(PREFIX)/share/man
@@ -15,49 +17,48 @@ SRCS_INDEP = grid.c state.c king.c network.c client.c server.c output-common.c m
 SRCS_NCURSES = output.c main.c 
 SRCS_SDL = output-sdl.c main-sdl.c
 
-HDRS_INDEP = common.h messaging.h $(patsubst %.c,%.h,$(SRCS_INDEP))
+HDRS_INDEP = common.h messaging.h $(SRCS_INDEP:.c=.h)
 HDRS_NCURSES = output.h
 HDRS_SDL = output-sdl.h
 
-OBJS_INDEP = $(patsubst %.c,%.o,$(SRCS_INDEP))
-OBJS_NCURSES = $(patsubst %.c,%.o,$(SRCS_NCURSES))
-OBJS_SDL = $(patsubst %.c,%.o,$(SRCS_SDL))
+OBJS_INDEP = $(SRCS_INDEP:.c=.o)
+OBJS_NCURSES = $(SRCS_NCURSES:.c=.o)
+OBJS_SDL = $(SRCS_SDL:.c=.o)
 
-SRCS    = $(wildcard *.c)
-HDRS    = $(wildcard *.h)
-OBJS    = $(patsubst %.c,%.o,$(SRCS))
-EXECS = $(EXEC) $(EXEC_SDL)
+EXECS = $(EXEC_NCURSES) $(EXEC_SDL)
 CFLAGS += -Wall -O2
-LDLIBS += -lncurses -lm 
+LDLIBS += -lm
 
-CFLAGS_SDL = $(shell sdl-config --cflags)
-LDLIBS_SDL = $(shell sdl-config --libs)
+# SDL or ncurses
+OBJS = $(OBJS_INDEP) 
+HDRS = $(HDRS_INDEP) 
+ifdef SDL
+ OBJS += $(OBJS_SDL)
+ HDRS += $(HDRS_SDL)
+ CFLAGS += $(shell sdl-config --cflags)
+ LDLIBS += $(shell sdl-config --libs)
+ EXEC = $(EXEC_SDL)
+else
+ OBJS += $(OBJS_NCURSES)
+ HDRS += $(HDRS_NCURSES)
+ LDLIBS += -lncurses
+ EXEC = $(EXEC_NCURSES)
+endif
 
 VERSION=`cat VERSION`
 
 .PHONY: all clean cleanall
 
-all: $(EXEC)
 
-sdl: $(EXEC_SDL)
+all: $(EXEC)
 
 clean:
 	-rm -f $(OBJS_INDEP) $(OBJS_NCURSES) $(OBJS_SDL) $(EXECS)
 
-$(OBJS_INDEP): $(patsubst %.o,%.c,$@) $(HDRS_INDEP)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $(patsubst %.o,%.c,$@)
+.c.o: $(CC) $(CPPFLAGS) $(CFLAGS) -c $<
 
-$(OBJS_NCURSES): $(patsubst %.o,%.c,$@) $(HDRS_INDEP) $(HDRS_NCURSES)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $(patsubst %.o,%.c,$@)
-
-$(OBJS_SDL): $(patsubst %.o,%.c,$@) $(HDRS_INDEP) $(HDRS_SDL)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(CFLAGS_SDL) -c $(patsubst %.o,%.c,$@)
-
-$(EXEC): $(OBJS_INDEP) $(OBJS_NCURSES)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS_INDEP) $(OBJS_NCURSES) $(LDLIBS) -o $(EXEC)
-
-$(EXEC_SDL): $(OBJS_INDEP) $(OBJS_SDL)
-	$(CC) $(CFLAGS) $(CFLAGS_SDL) $(LDFLAGS) $(OBJS_INDEP) $(OBJS_SDL) $(LDLIBS) $(LDLIBS_SDL) -o $(EXEC_SDL)
+$(EXEC): $(OBJS) $(HDRS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $(EXEC)
 
 install: all
 	$(INSTALL) -m 755 -D $(EXEC) $(BINDIR)/$(EXEC)

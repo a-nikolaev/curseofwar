@@ -34,7 +34,34 @@
 /* delay in milliseconds */
 #define TIME_DELAY 10
 
-void run(struct state *st, struct ui *ui, SDL_Surface *screen, SDL_Surface *tileset){
+/*
+   load_image (filename, &surface_ptr)
+    Load BMP image, returns 0 on success, or 1 if fails.
+ */
+int load_image(char *filename, SDL_Surface **image) {
+  SDL_Surface *temp;
+   
+  temp = SDL_LoadBMP(filename);
+  if (temp == NULL) {
+    printf("Unable to load bitmap: %s\n", SDL_GetError());
+      return 1;
+  }
+
+  SDL_LockSurface(temp);
+  Uint32 colorkey = getpixel(temp, temp->w-1, temp->h-1);
+  SDL_UnlockSurface(temp);
+  colorkey = SDL_MapRGB(temp->format, 0, 255, 255);
+
+  if (SDL_SetColorKey(temp, SDL_SRCCOLORKEY | SDL_RLEACCEL, colorkey) == -1) {
+    fprintf(stderr, "Warning: colorkey will not be used, reason: %s\n", SDL_GetError());
+  }
+   
+  *image = SDL_DisplayFormat(temp);
+  SDL_FreeSurface(temp);
+  return 0;
+}
+
+void run(struct state *st, struct ui *ui, SDL_Surface *screen, SDL_Surface *tileset, SDL_Surface *typeface){
   /* tile variation */
   int tile_variant[MAX_WIDTH][MAX_HEIGHT];
   int pop_variant[MAX_WIDTH][MAX_HEIGHT];
@@ -89,7 +116,7 @@ void run(struct state *st, struct ui *ui, SDL_Surface *screen, SDL_Surface *tile
       }
 
       if (k % 5 == 0) {
-        output_sdl(tileset, screen, st, ui, tile_variant, pop_variant, k);
+        output_sdl(tileset, typeface, screen, st, ui, tile_variant, pop_variant, k);
         SDL_Flip(screen);
       }
     }
@@ -119,27 +146,11 @@ int main(int argc, char *argv[]) {
   SDL_EnableUNICODE(1);
   SDL_EnableKeyRepeat(300, 30);
 
-  /* Load Image */
+  /* Load Images */
   SDL_Surface *tileset;
-  SDL_Surface *temp;
-   
-  temp = SDL_LoadBMP("../draw/tileset.bmp");
-  if (temp == NULL) {
-      printf("Unable to load bitmap: %s\n", SDL_GetError());
-        return 1;
-  }
-
-  SDL_LockSurface(temp);
-  Uint32 colorkey = getpixel(temp, temp->w-1, temp->h-1);
-  SDL_UnlockSurface(temp);
-  colorkey = SDL_MapRGB(temp->format, 0, 255, 255);
-
-  if (SDL_SetColorKey(temp, SDL_SRCCOLORKEY | SDL_RLEACCEL, colorkey) == -1) {
-    fprintf(stderr, "Warning: colorkey will not be used, reason: %s\n", SDL_GetError());
-  }
-   
-  tileset = SDL_DisplayFormat(temp);
-  SDL_FreeSurface(temp);
+  if ( load_image("../draw/tileset.bmp", &tileset) != 0) return 1;
+  SDL_Surface *typeface;
+  if ( load_image("../draw/type.bmp", &typeface) != 0) return 1;
 
   /* Read command line arguments */
   struct basic_options op;
@@ -154,7 +165,7 @@ int main(int argc, char *argv[]) {
   ui_init(&st, &ui);
 
   /* Run the game */
-  run(&st, &ui, screen, tileset);
+  run(&st, &ui, screen, tileset, typeface);
 
   /* Finalize */
   SDL_FreeSurface(tileset);
