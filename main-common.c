@@ -19,8 +19,11 @@
 ******************************************************************************/
 
 #include <stdio.h>
+#include <getopt.h>
+#include <string.h>
 #include "common.h"
 #include "state.h"
+#include "main-common.h"
 
 void print_help() {
   printf(
@@ -86,6 +89,184 @@ int game_slowdown (int speed) {
   }
   return slowdown;
 }
+
+int get_options(int argc, char *argv[], struct basic_options *op, struct multi_options *mop) {
+  
+  op->keep_random_flag = 0; // random
+  op->dif = dif_normal; // diffiulty
+  op->speed = sp_normal; // speed
+  op->w = 21; // width
+  op->h = 21; // height
+  op->loc_num = 0;  // the number of starting locations
+  op->map_seed = rand();
+  op->conditions = 0;
+  op->timeline_flag = 0;
+
+  op->inequality = RANDOM_INEQUALITY;
+  op->shape = st_rect;
+
+  /* multiplayer option */
+  mop->clients_num = 1;
+  mop->multiplayer_flag = 0;
+  mop->server_flag = 1;
+  
+  free(mop->val_client_port);
+  free(mop->val_server_addr);
+  free(mop->val_server_port);
+
+  mop->val_client_port = strdup(DEF_CLIENT_PORT);
+  mop->val_server_addr = strdup(DEF_SERVER_ADDR);
+  mop->val_server_port = strdup(DEF_SERVER_PORT);
+  
+  int conditions_were_set = 0;
+  opterr = 0;
+  int c;
+  while ((c = getopt (argc, argv, "hrTW:H:i:l:q:d:s:R:S:E:e:C:c:")) != -1){
+    switch(c){
+      case 'r': op->keep_random_flag = 1; break;
+      case 'T': op->timeline_flag = 1; break;
+      case 'W': { char* endptr = NULL;
+                  op->w = MAX(14, strtol(optarg, &endptr, 10));
+                  if (*endptr != '\0') {
+                    print_help();
+                    return 1;
+                  }
+                };
+                break;
+      case 'H': { char* endptr = NULL;
+                  op->h = MAX(14, strtol(optarg, &endptr, 10));
+                  if (*endptr != '\0') {
+                    print_help();
+                    return 1;
+                  }
+                };
+                break;
+      case 'i': { char* endptr = NULL;
+                  op->inequality = strtol(optarg, &endptr, 10);
+                  if (*endptr != '\0' || op->inequality < 0 || op->inequality > 4) {
+                    print_help();
+                    return 1;
+                  }
+                };
+                break;
+      case 'l': { char* endptr = NULL;
+                  op->loc_num = strtol(optarg, &endptr, 10);
+                  if (*endptr != '\0') {
+                    print_help();
+                    return 1;
+                  }
+                };
+                break;
+      case 'q': { char* endptr = NULL;
+                  op->conditions = strtol(optarg, &endptr, 10);
+                  conditions_were_set = 1;
+                  if (*endptr != '\0') {
+                    print_help();
+                    return 1;
+                  }
+                };
+                break;
+      case 'R': { char* endptr = NULL;
+                  op->map_seed = abs(strtol(optarg, &endptr, 10));
+                  if (*endptr != '\0' || *optarg == '\0') {
+                    print_help();
+                    return 1;
+                  }
+                };
+                break;
+      case 'd': if (strcmp(optarg, "n") == 0) op->dif = dif_normal;
+                else if (strcmp(optarg, "e") == 0) op->dif = dif_easy;
+                else if (strcmp(optarg, "e1") == 0) op->dif = dif_easy;
+                else if (strcmp(optarg, "ee") == 0) op->dif = dif_easiest;
+                else if (strcmp(optarg, "e2") == 0) op->dif = dif_easiest;
+                else if (strcmp(optarg, "h") == 0) op->dif = dif_hard;
+                else if (strcmp(optarg, "h1") == 0) op->dif = dif_hard;
+                else if (strcmp(optarg, "hh") == 0) op->dif = dif_hardest;
+                else if (strcmp(optarg, "h2") == 0) op->dif = dif_hardest;
+                else {
+                  print_help();
+                  return 1;
+                }
+                break;
+      case 's': if (strcmp(optarg, "n") == 0) op->speed = sp_normal;
+                else if (strcmp(optarg, "s") == 0 || strcmp(optarg, "s1") == 0) op->speed = sp_slow;
+                else if (strcmp(optarg, "ss") == 0 || strcmp(optarg, "s2") == 0) op->speed = sp_slower;
+                else if (strcmp(optarg, "sss") == 0 || strcmp(optarg, "s3") == 0) op->speed = sp_slowest;
+                else if (strcmp(optarg, "f") == 0 || strcmp(optarg, "f1") == 0) op->speed = sp_fast;
+                else if (strcmp(optarg, "ff") == 0 || strcmp(optarg, "f2") == 0) op->speed = sp_faster;
+                else if (strcmp(optarg, "fff") == 0 || strcmp(optarg, "f3") == 0) op->speed = sp_fastest;
+                else if (strcmp(optarg, "p") == 0) op->speed = sp_pause;
+                else {
+                  print_help();
+                  return 1;
+                }
+                break;
+      case 'S': if (strcmp(optarg, "rhombus") == 0) op->shape = st_rhombus;
+                else if (strcmp(optarg, "rect") == 0) op->shape = st_rect;
+                else if (strcmp(optarg, "hex") == 0) op->shape = st_hex;
+                else {
+                  print_help();
+                  return 1;
+                }
+                break;
+
+                /* multiplayer-related options */
+      case 'E': { char* endptr = NULL;
+                  mop->clients_num = strtol(optarg, &endptr, 10);
+                  if (*endptr != '\0') {
+                    print_help();
+                    return 1;
+                  }
+                  mop->multiplayer_flag = 1;
+                  mop->server_flag = 1; 
+                }
+                break;
+      case 'e':
+                free(mop->val_server_port);
+                mop->val_server_port = strdup(optarg);
+                break;
+      case 'C': 
+                mop->multiplayer_flag = 1;
+                mop->server_flag = 0; 
+                free(mop->val_server_addr);
+                mop->val_server_addr = strdup(optarg);
+                break;
+      case 'c':
+                free(mop->val_client_port);
+                mop->val_client_port = strdup(optarg);
+                break;
+      case '?': case 'h':
+          print_help();
+          return 1;
+      default: 
+          return 1;
+    }
+  }
+  /* Adjust l_val and conditions_val */
+  int avlbl_loc_num = stencil_avlbl_loc_num (op->shape);
+  if(op->loc_num == 0) op->loc_num = avlbl_loc_num;
+
+  if (op->loc_num < 2 || op->loc_num > avlbl_loc_num) {
+    print_help();
+    return 1;
+  }
+  if (conditions_were_set && (op->conditions<1 || op->conditions>op->loc_num)) {
+    print_help();
+    return 1;
+  }
+
+  if (mop->clients_num < 1 || mop->clients_num > op->loc_num) {
+    print_help();
+    return 1;
+  }
+
+  if (op->shape == st_rect) {
+    op->w = MIN(MAX_WIDTH-1, op->w + (op->h + 1)/2);
+  }
+  return 0;
+}
+
+
 
 
 int singleplayer_process_input (struct state *st, struct ui *ui, char c) {

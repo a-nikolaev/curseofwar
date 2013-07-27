@@ -30,6 +30,8 @@ int game_slowdown (int speed);
 
 void print_help();
 
+int get_options(int argc, char *argv[], struct basic_options *op, struct multi_options *mop);
+
 int singleplayer_process_input (struct state *st, struct ui *ui, char c);
 
 #endif

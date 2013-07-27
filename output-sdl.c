@@ -131,16 +131,13 @@ void output_sdl (SDL_Surface *tileset, SDL_Surface *screen, struct state *s, str
           /* draw everything else */
           switch (s->grid.tiles[i][j].cl) {
             case village: 
-              srci=0; srcj=7; 
-              if (owner != s->controlled) srcj += 3;
+              srci=0; srcj=7 + 3*owner; 
               break;
             case town: 
-              srci=1; srcj=7; 
-              if (owner != s->controlled) srcj += 3;
+              srci=1; srcj=7 + 3*owner; 
               break;
             case castle: 
-              srci=2; srcj=7; 
-              if (owner != s->controlled) srcj += 3;
+              srci=2; srcj=7 + 3*owner; 
               break;
             case mountain: case mine:
               srci=0 + variant[i][j]%5; 
@@ -151,10 +148,13 @@ void output_sdl (SDL_Surface *tileset, SDL_Surface *screen, struct state *s, str
                 int pop = s->grid.tiles[i][j].units[owner][citizen];
                 if (pop > 0) {
                   srci = 0 + pop_to_symbol(pop);
-                  srcj = 8;
-                  if (owner != s->controlled) srcj += 3;
+                  srcj = 8 + 3*(owner);
                   blit_subpic_noise (tileset, screen, srci, srcj, POSX(ui, i), POSY(j), pop_variant[i][j]);
-                  if (rand()%100 == 0) pop_variant[i][j] = (pop_variant[i][j] + 1) % 10000;
+                  if (rand()%20 == 0) {
+                    int d = 1;
+                    if (owner != s->controlled) d = 11;
+                    pop_variant[i][j] = (pop_variant[i][j] + d) % 10000;
+                  }
                 }
               }
               done = 1;
@@ -178,12 +178,12 @@ void output_sdl (SDL_Surface *tileset, SDL_Surface *screen, struct state *s, str
       for (p=0; p<MAX_PLAYER; ++p) {
         if (p != s->controlled) {
           if (s->fg[p].flag[i][j] != 0 && ((ktime/5 + p) / 5)%10 < 10) {
-            blit_subpic_2h (tileset, screen, 4, 10, POSX(ui, i), POSY(j));
+            blit_subpic_2h (tileset, screen, 4, 7+3*p, POSX(ui, i), POSY(j));
           }
         }
         else 
           if (s->fg[p].flag[i][j] != 0) {
-            blit_subpic_2h (tileset, screen, 3, 7, POSX(ui, i), POSY(j));
+            blit_subpic_2h (tileset, screen, 3, 7+3*p, POSX(ui, i), POSY(j));
           }
       }
 

@@ -259,179 +259,12 @@ int main(int argc, char* argv[]){
   /* Initialize pseudo random number generator */
   srand(time(NULL));
 
-  /* Parse argv */
-  int r_flag = 0; // random
-  int dif_val = dif_normal; // diffiulty
-  int sp_val = sp_normal; // speed
-  int w_val = 21; // width
-  int h_val = 21; // height
-  int l_val = 0;  // the number of starting locations
-  unsigned int seed_val = rand();
-  int conditions_val = 0;
-  int conditions_were_set = 0;
-  int timeline_flag = 0;
-
-  int ineq_val = RANDOM_INEQUALITY;
-  enum stencil shape_val = st_rect;
-
-  /* multiplayer option */
-  int multiplayer_flag = 0;
-  int server_flag = 1;
-  
-  char* val_client_port = strdup(DEF_CLIENT_PORT);
-  char* val_server_addr = strdup(DEF_SERVER_ADDR);
-  char* val_server_port = strdup(DEF_SERVER_PORT);
-
-  int val_clients_num = 1;
-
-  opterr = 0;
-  int c;
-  while ((c = getopt (argc, argv, "hrTW:H:i:l:q:d:s:R:S:E:e:C:c:")) != -1){
-    switch(c){
-      case 'r': r_flag = 1; break;
-      case 'T': timeline_flag = 1; break;
-      //case 'f': f_val = optarg; break;
-      case 'W': { char* endptr = NULL;
-                  w_val = MAX(14, strtol(optarg, &endptr, 10));
-                  if (*endptr != '\0') {
-                    print_help();
-                    return 1;
-                  }
-                };
-                break;
-      case 'H': { char* endptr = NULL;
-                  h_val = MAX(14, strtol(optarg, &endptr, 10));
-                  if (*endptr != '\0') {
-                    print_help();
-                    return 1;
-                  }
-                };
-                break;
-      case 'i': { char* endptr = NULL;
-                  ineq_val = strtol(optarg, &endptr, 10);
-                  if (*endptr != '\0' || ineq_val < 0 || ineq_val > 4) {
-                    print_help();
-                    return 1;
-                  }
-                };
-                break;
-      case 'l': { char* endptr = NULL;
-                  l_val = strtol(optarg, &endptr, 10);
-                  if (*endptr != '\0') {
-                    print_help();
-                    return 1;
-                  }
-                };
-                break;
-      case 'q': { char* endptr = NULL;
-                  conditions_val = strtol(optarg, &endptr, 10);
-                  conditions_were_set = 1;
-                  if (*endptr != '\0') {
-                    print_help();
-                    return 1;
-                  }
-                };
-                break;
-      case 'R': { char* endptr = NULL;
-                  seed_val = abs(strtol(optarg, &endptr, 10));
-                  if (*endptr != '\0' || *optarg == '\0') {
-                    print_help();
-                    return 1;
-                  }
-                };
-                break;
-      case 'd': if (strcmp(optarg, "n") == 0) dif_val = dif_normal;
-                else if (strcmp(optarg, "e") == 0) dif_val = dif_easy;
-                else if (strcmp(optarg, "e1") == 0) dif_val = dif_easy;
-                else if (strcmp(optarg, "ee") == 0) dif_val = dif_easiest;
-                else if (strcmp(optarg, "e2") == 0) dif_val = dif_easiest;
-                else if (strcmp(optarg, "h") == 0) dif_val = dif_hard;
-                else if (strcmp(optarg, "h1") == 0) dif_val = dif_hard;
-                else if (strcmp(optarg, "hh") == 0) dif_val = dif_hardest;
-                else if (strcmp(optarg, "h2") == 0) dif_val = dif_hardest;
-                else {
-                  print_help();
-                  return 1;
-                }
-                break;
-      case 's': if (strcmp(optarg, "n") == 0) sp_val = sp_normal;
-                else if (strcmp(optarg, "s") == 0 || strcmp(optarg, "s1") == 0) sp_val = sp_slow;
-                else if (strcmp(optarg, "ss") == 0 || strcmp(optarg, "s2") == 0) sp_val = sp_slower;
-                else if (strcmp(optarg, "sss") == 0 || strcmp(optarg, "s3") == 0) sp_val = sp_slowest;
-                else if (strcmp(optarg, "f") == 0 || strcmp(optarg, "f1") == 0) sp_val = sp_fast;
-                else if (strcmp(optarg, "ff") == 0 || strcmp(optarg, "f2") == 0) sp_val = sp_faster;
-                else if (strcmp(optarg, "fff") == 0 || strcmp(optarg, "f3") == 0) sp_val = sp_fastest;
-                else if (strcmp(optarg, "p") == 0) sp_val = sp_pause;
-                else {
-                  print_help();
-                  return 1;
-                }
-                break;
-      case 'S': if (strcmp(optarg, "rhombus") == 0) shape_val = st_rhombus;
-                else if (strcmp(optarg, "rect") == 0) shape_val = st_rect;
-                else if (strcmp(optarg, "hex") == 0) shape_val = st_hex;
-                else {
-                  print_help();
-                  return 1;
-                }
-                break;
-
-                /* multiplayer-related options */
-      case 'E': { char* endptr = NULL;
-                  val_clients_num = strtol(optarg, &endptr, 10);
-                  if (*endptr != '\0') {
-                    print_help();
-                    return 1;
-                  }
-                  multiplayer_flag = 1;
-                  server_flag = 1; 
-                }
-                break;
-      case 'e':
-                free(val_server_port);
-                val_server_port = strdup(optarg);
-                break;
-      case 'C': 
-                multiplayer_flag = 1;
-                server_flag = 0; 
-                free(val_server_addr);
-                val_server_addr = strdup(optarg);
-                break;
-      case 'c':
-                free(val_client_port);
-                val_client_port = strdup(optarg);
-                break;
-      case '?': case 'h':
-          print_help();
-          return 1;
-      default: abort ();
-    }
-  }
-  /* Adjust l_val and conditions_val */
-  {
-    int avlbl_loc_num = stencil_avlbl_loc_num (shape_val);
-    if(l_val == 0) l_val = avlbl_loc_num;
-
-    if (l_val < 2 || l_val > avlbl_loc_num) {
-      print_help();
-      return 1;
-    }
-    if (conditions_were_set && (conditions_val<1 || conditions_val>l_val)) {
-      print_help();
-      return 1;
-    }
-
-    if (val_clients_num < 1 || val_clients_num > l_val) {
-      print_help();
-      return 1;
-    }
-
-    if (shape_val == st_rect) {
-      w_val = MIN(MAX_WIDTH-1, w_val+(h_val+1)/2);
-    }
-  }
-
-  
+  /* Read command line arguments */
+  struct basic_options op;
+  struct multi_options mop;
+  if (get_options(argc, argv, &op, &mop) == 1) return 1;
+ 
+  /* Setup signal handlers */
   struct sigaction newhandler;            /* new settings         */
   sigset_t         blocked;               /* set of blocked sigs  */
   newhandler.sa_flags = SA_RESTART;       /* options     */
@@ -474,7 +307,7 @@ int main(int argc, char* argv[]){
   mvaddstr(0,0,"Map is generated. Please wait.");
   refresh();
 
-  state_init(&st, w_val, h_val, shape_val, seed_val, r_flag, l_val, val_clients_num, conditions_val, ineq_val, sp_val, dif_val, timeline_flag);
+  state_init(&st, &op, &mop);
  
   ui_init(&st, &ui);
 
@@ -496,13 +329,13 @@ int main(int argc, char* argv[]){
   input_ready = 0;
   time_to_redraw = 1;
 
-  if (!multiplayer_flag) {
+  if (!mop.multiplayer_flag) {
     /* Run the game */
     run(&st, &ui);
   }
   else {
-    if (server_flag) run_server(&st, val_clients_num, val_server_port);
-    else run_client(&st, &ui, val_server_addr, val_server_port, val_client_port);
+    if (mop.server_flag) run_server(&st, mop.clients_num, mop.val_server_port);
+    else run_client(&st, &ui, mop.val_server_addr, mop.val_server_port, mop.val_client_port);
   }
 
   /* Restore the teminal state */
@@ -511,12 +344,12 @@ int main(int argc, char* argv[]){
   clear();
   endwin();
 
-  if (!multiplayer_flag || server_flag)
+  if (!mop.multiplayer_flag || mop.server_flag)
     printf ("Random seed was %i\n", st.map_seed);
 
-  free(val_server_addr);
-  free(val_server_port);
-  free(val_client_port);
+  free(mop.val_server_addr);
+  free(mop.val_server_port);
+  free(mop.val_client_port);
   return 0;
 }
 

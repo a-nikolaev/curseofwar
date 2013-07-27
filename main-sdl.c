@@ -141,71 +141,29 @@ int main(int argc, char *argv[]) {
   tileset = SDL_DisplayFormat(temp);
   SDL_FreeSurface(temp);
 
-  /* Parse argv */
-  int r_flag = 0; // random
-  int dif_val = dif_normal; // diffiulty
-  int sp_val = sp_normal; // speed
-  int w_val = 21; // width
-  int h_val = 21; // height
-  int l_val = 0;  // the number of starting locations
-  unsigned int seed_val = rand();
-  int conditions_val = 0;
-  int conditions_were_set = 0;
-  int timeline_flag = 0;
+  /* Read command line arguments */
+  struct basic_options op;
+  struct multi_options mop;
+  if (get_options(argc, argv, &op, &mop) == 1) return 1;
 
-  int ineq_val = RANDOM_INEQUALITY;
-  enum stencil shape_val = st_rhombus;
-
-  /* multiplayer option */
-  int multiplayer_flag = 0;
-  int server_flag = 1;
-  
-  char* val_client_port = strdup(DEF_CLIENT_PORT);
-  char* val_server_addr = strdup(DEF_SERVER_ADDR);
-  char* val_server_port = strdup(DEF_SERVER_PORT);
-  int val_clients_num = 1;
-
-  
-  /* Adjust l_val and conditions_val */
-  {
-    int avlbl_loc_num = stencil_avlbl_loc_num (shape_val);
-    if(l_val == 0) l_val = avlbl_loc_num;
-
-    if (l_val < 2 || l_val > avlbl_loc_num) {
-      return 1;
-    }
-    if (conditions_were_set && (conditions_val<1 || conditions_val>l_val)) {
-      return 1;
-    }
-
-    if (val_clients_num < 1 || val_clients_num > l_val) {
-      return 1;
-    }
-
-    if (shape_val == st_rect) {
-      w_val = MIN(MAX_WIDTH-1, w_val+(h_val+1)/2);
-    }
-  }
-  
-  
-  
+  /* Initialize the state */
   struct state st;
   struct ui ui;
 
-
-  state_init(&st, w_val, h_val, shape_val, seed_val, r_flag, l_val, val_clients_num, conditions_val, ineq_val, sp_val, dif_val, timeline_flag);
+  state_init(&st, &op, &mop);
   ui_init(&st, &ui);
 
-
+  /* Run the game */
   run(&st, &ui, screen, tileset);
 
+  /* Finalize */
   SDL_FreeSurface(tileset);
   
-  if (!multiplayer_flag || server_flag)
+  if (!mop.multiplayer_flag || mop.server_flag)
     printf ("Random seed was %i\n", st.map_seed);
-
-  free(val_server_addr);
-  free(val_server_port);
-  free(val_client_port);
+  
+  free(mop.val_client_port);
+  free(mop.val_server_addr);
+  free(mop.val_server_port);
   return 0;
 }
