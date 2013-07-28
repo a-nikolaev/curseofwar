@@ -1,3 +1,6 @@
+incoming version
+  * Added copyright header to network.* files
+
 version 1.1.8 2013-07-27
   * Added timeline showing population vs time graphs (with option -T)
   * Install changelog.gz
