@@ -174,6 +174,34 @@ void ui_init(struct state *s, struct ui *ui) {
   ui->xlength = (xrightmost_x2+1)/2 - xskip_x2/2;
 }
 
+void adjust_cursor(struct state *s, struct ui *ui, int cursi, int cursj) {
+  cursi = IN_SEGMENT(cursi, 0, s->grid.width-1);
+  cursj = IN_SEGMENT(cursj, 0, s->grid.height-1);
+  if ( is_visible(s->grid.tiles[cursi][cursj].cl) ) {
+    ui->cursor.i = cursi;
+    ui->cursor.j = cursj;
+  }
+  else if ( is_visible(s->grid.tiles[ui->cursor.i][cursj].cl) ) {
+    ui->cursor.j = cursj;
+  }
+  else {
+    int i = cursi-1;
+    i = IN_SEGMENT(i, 0, s->grid.width-1);
+    if (is_visible(s->grid.tiles[i][cursj].cl)) {
+      ui->cursor.i = i;
+      ui->cursor.j = cursj;
+    }
+    else{
+      i = cursi+1;
+      i = IN_SEGMENT(i, 0, s->grid.width-1);
+      if (is_visible(s->grid.tiles[i][cursj].cl)) {
+        ui->cursor.i = i;
+        ui->cursor.j = cursj;
+      }
+    }
+  }
+}
+
 #define GROWTH_1 1.10
 #define GROWTH_2 1.20
 #define GROWTH_3 1.30

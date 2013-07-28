@@ -266,9 +266,6 @@ int get_options(int argc, char *argv[], struct basic_options *op, struct multi_o
   return 0;
 }
 
-
-
-
 int singleplayer_process_input (struct state *st, struct ui *ui, char c) {
   int cursi = ui->cursor.i;
   int cursj = ui->cursor.j;
@@ -329,12 +326,7 @@ int singleplayer_process_input (struct state *st, struct ui *ui, char c) {
       break;
   }
   
-  cursi = IN_SEGMENT(cursi, 0, st->grid.width-1);
-  cursj = IN_SEGMENT(cursj, 0, st->grid.height-1);
-  if ( is_visible(st->grid.tiles[cursi][cursj].cl) ) {
-    ui->cursor.i = cursi;
-    ui->cursor.j = cursj;
-  }
+  adjust_cursor(st, ui, cursi, cursj);
 
   return 0;
 }

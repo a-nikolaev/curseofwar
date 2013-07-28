@@ -138,6 +138,10 @@ void state_init(struct state *s, struct basic_options *op, struct multi_options 
 /* compute the cursor location, and xskip */
 void ui_init(struct state *s, struct ui *ui);
 
+/* Try to change the cursor position with new values cursi, cursj. Adjust if necessary */
+void adjust_cursor(struct state *s, struct ui *ui, int cursi, int cursj);
+
+
 /* 
   kings_move(&s)
     Kings build cities and place flags */

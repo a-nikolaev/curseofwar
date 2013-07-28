@@ -158,6 +158,36 @@ void output_string(SDL_Surface *typeface, SDL_Surface *screen, char *str, int ds
   }
 }
 
+/* check if coordinates (i,j) are within the grid */
+int is_within_the_grid (int i, int j, struct grid *g) {
+  return (i>=0 && i<g->width && j>=0 && j <g->height);
+}
+
+int is_a_normal_tile (int i, int j, struct grid *g) {
+  return (is_within_the_grid(i,j,g) && is_visible(g->tiles[i][j].cl));
+}
+
+#define MAX_CLIFF 4
+
+int is_a_cliff (int i, int j, struct grid *g, int buf[MAX_CLIFF]) {
+  int left, right, top, bottom;
+  if (!is_a_normal_tile(i,j,g)) {
+    left = is_a_normal_tile(i-1,j,g);
+    right = is_a_normal_tile(i+1,j,g);
+    top = is_a_normal_tile(i,j-1,g) || is_a_normal_tile(i+1,j-1,g);
+    bottom = is_a_normal_tile(i,j+1,g) || is_a_normal_tile(i-1,j+1,g);
+    
+    buf[0] = left && top;
+    buf[1] = right && top;
+    buf[2] = left && bottom;
+    buf[3] = right && bottom;
+  }
+  else {
+    return 0;
+  }
+  return 1;
+}
+
 #define POSY(j) ((j)+1)
 #define POSX(ui,i) ((i) - (ui->xskip))
 
@@ -170,11 +200,29 @@ void output_sdl (SDL_Surface *tileset, SDL_Surface *typeface, SDL_Surface *scree
   SDL_FillRect(screen, &rect, (SDL_MapRGB(screen->format, 0, 0, 0)));
 
   /* Draw */
-  int i=0,j=0;
+  int i=0,j=0,k=0;
   int srci=0, srcj=0;
+
+  /* cliffs variables */
+  int cliff_buf[MAX_CLIFF];
+
   for (j=0; j<s->grid.height; ++j) {
-    for (i=0; i<s->grid.width; ++i) {
-      
+    for (i=-1; i<s->grid.width+1; ++i) {
+      /* cliffs */
+      if (is_a_cliff(i, j, &s->grid, cliff_buf)) {
+        for(k=0; k<MAX_CLIFF; ++k) {
+          if (cliff_buf[k]) {
+            blit_subpic (tileset, screen, 7+k, 0, POSX(ui, i), POSY(j));
+          }
+        }
+        continue;
+      }
+
+      if (!is_within_the_grid(i,j,&s->grid)) {
+        continue;
+      }
+
+      /* normal tiles */
       int owner = s->grid.tiles[i][j].pl;
       int done = 0; 
       switch (s->grid.tiles[i][j].cl) {
