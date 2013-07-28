@@ -51,6 +51,29 @@ Uint32 getpixel(SDL_Surface *surface, int x, int y) {
   }
 }
 
+int load_image(char *filename, SDL_Surface **image) {
+  SDL_Surface *temp;
+   
+  temp = SDL_LoadBMP(filename);
+  if (temp == NULL) {
+    printf("Unable to load bitmap: %s\n", SDL_GetError());
+      return 1;
+  }
+
+  SDL_LockSurface(temp);
+  Uint32 colorkey = getpixel(temp, temp->w-1, temp->h-1);
+  SDL_UnlockSurface(temp);
+  colorkey = SDL_MapRGB(temp->format, 0, 255, 255);
+
+  if (SDL_SetColorKey(temp, SDL_SRCCOLORKEY | SDL_RLEACCEL, colorkey) == -1) {
+    fprintf(stderr, "Warning: colorkey will not be used, reason: %s\n", SDL_GetError());
+  }
+   
+  *image = SDL_DisplayFormat(temp);
+  SDL_FreeSurface(temp);
+  return 0;
+}
+
 void blit_subpic(SDL_Surface *src_surf, SDL_Surface *dst_surf, int srci, int srcj, int dsti, int dstj) {
   static SDL_Rect src, dest;
    

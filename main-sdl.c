@@ -31,33 +31,6 @@
 /* delay in milliseconds */
 #define TIME_DELAY 10
 
-/*
-   load_image (filename, &surface_ptr)
-    Load BMP image, returns 0 on success, or 1 if fails.
- */
-int load_image(char *filename, SDL_Surface **image) {
-  SDL_Surface *temp;
-   
-  temp = SDL_LoadBMP(filename);
-  if (temp == NULL) {
-    printf("Unable to load bitmap: %s\n", SDL_GetError());
-      return 1;
-  }
-
-  SDL_LockSurface(temp);
-  Uint32 colorkey = getpixel(temp, temp->w-1, temp->h-1);
-  SDL_UnlockSurface(temp);
-  colorkey = SDL_MapRGB(temp->format, 0, 255, 255);
-
-  if (SDL_SetColorKey(temp, SDL_SRCCOLORKEY | SDL_RLEACCEL, colorkey) == -1) {
-    fprintf(stderr, "Warning: colorkey will not be used, reason: %s\n", SDL_GetError());
-  }
-   
-  *image = SDL_DisplayFormat(temp);
-  SDL_FreeSurface(temp);
-  return 0;
-}
-
 void run(struct state *st, struct ui *ui, SDL_Surface *screen, SDL_Surface *tileset, SDL_Surface *typeface){
   /* tile variation */
   int tile_variant[MAX_WIDTH][MAX_HEIGHT];
@@ -160,9 +133,9 @@ int main(int argc, char *argv[]) {
 
   /* Load Images */
   SDL_Surface *tileset;
-  if ( load_image("../draw/tileset.bmp", &tileset) != 0) return 1;
+  if ( load_image("images/tileset.bmp", &tileset) != 0) return 1;
   SDL_Surface *typeface;
-  if ( load_image("../draw/type.bmp", &typeface) != 0) return 1;
+  if ( load_image("images/type.bmp", &typeface) != 0) return 1;
   
   /* Run the game */
   run(&st, &ui, screen, tileset, typeface);
