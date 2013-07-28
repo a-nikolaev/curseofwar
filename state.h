@@ -36,7 +36,8 @@ enum config_speed slower(enum config_speed);
 
 struct ui {
   struct loc cursor;
-  int xskip;
+  int xskip; /* number of tiles to skip in the beginning of every line */
+  int xlength; /* total max number of tiles in horizontal direction */
 };
 
 /* struct timeline */

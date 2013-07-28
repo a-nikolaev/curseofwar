@@ -55,7 +55,8 @@ all: $(EXEC)
 clean:
 	-rm -f $(OBJS_INDEP) $(OBJS_NCURSES) $(OBJS_SDL) $(EXECS)
 
-.c.o: $(CC) $(CPPFLAGS) $(CFLAGS) -c $<
+%.o: %.c $(HDRS)  
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
 
 $(EXEC): $(OBJS) $(HDRS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $(EXEC)

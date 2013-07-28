@@ -159,15 +159,19 @@ void ui_init(struct state *s, struct ui *ui) {
     }
   }
   /* find the leftmost visible tile */
-  ui->xskip = MAX_WIDTH * 2 + 1; 
+  int xskip_x2 = MAX_WIDTH * 2 + 1;
+  int xrightmost_x2 = 0;
   for(i=0; i<s->grid.width; ++i)
     for(j=0; j<s->grid.height; ++j)
       if(is_visible(s->grid.tiles[i][j].cl)) {
         int x = i*2 + j;
-        if (ui->xskip > x)
-          ui->xskip = x;
+        if (xskip_x2 > x)
+          xskip_x2 = x;
+        if (xrightmost_x2 < x)
+          xrightmost_x2 = x;
       }
-  ui->xskip = ui->xskip/2;
+  ui->xskip = xskip_x2/2;
+  ui->xlength = (xrightmost_x2+1)/2 - xskip_x2/2;
 }
 
 #define GROWTH_1 1.10

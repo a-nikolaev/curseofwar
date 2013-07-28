@@ -28,9 +28,9 @@
 #define TILE_WIDTH 32
 #define TILE_HEIGHT 16
 
-#define TYPE_WIDTH 14
-#define TYPE_HEIGHT 14
-#define TYPE_LINE_LENGTH 18
+#define TYPE_WIDTH 9
+#define TYPE_HEIGHT 15
+#define TYPE_LINE_LENGTH 32
 #define TYPE_FIRST 33
 
 Uint32 getpixel(SDL_Surface *surface, int x, int y);

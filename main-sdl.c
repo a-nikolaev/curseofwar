@@ -22,9 +22,6 @@
 #include <time.h>
 #include "SDL.h"
 
-#define SCREEN_WIDTH 1024
-#define SCREEN_HEIGHT 480 
-
 #include "grid.h"
 #include "common.h"
 #include "state.h"
@@ -130,6 +127,21 @@ int main(int argc, char *argv[]) {
 
   srand(time(NULL));
 
+  /* Read command line arguments */
+  struct basic_options op;
+  struct multi_options mop;
+  if (get_options(argc, argv, &op, &mop) == 1) return 1;
+
+  /* Initialize the state */
+  struct state st;
+  struct ui ui;
+
+  state_init(&st, &op, &mop);
+  ui_init(&st, &ui);
+
+  int screen_width = (ui.xlength + 2) * TILE_WIDTH;
+  int screen_height = (st.grid.height + 3) * TILE_HEIGHT;
+  /* Init SDL */
   if ( SDL_Init(SDL_INIT_AUDIO|SDL_INIT_VIDEO) < 0 ) {
     fprintf(stderr, "Unable to init SDL: %s\n", SDL_GetError());
     exit(1);
@@ -137,7 +149,7 @@ int main(int argc, char *argv[]) {
   atexit(SDL_Quit);
 
   SDL_Surface *screen;
-  screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 16, SDL_DOUBLEBUF);
+  screen = SDL_SetVideoMode(screen_width, screen_height, 16, SDL_DOUBLEBUF);
   if (screen == NULL) {
     fprintf(stderr, "Unable to set video mode: %s\n", SDL_GetError());
     exit(1);
@@ -151,19 +163,7 @@ int main(int argc, char *argv[]) {
   if ( load_image("../draw/tileset.bmp", &tileset) != 0) return 1;
   SDL_Surface *typeface;
   if ( load_image("../draw/type.bmp", &typeface) != 0) return 1;
-
-  /* Read command line arguments */
-  struct basic_options op;
-  struct multi_options mop;
-  if (get_options(argc, argv, &op, &mop) == 1) return 1;
-
-  /* Initialize the state */
-  struct state st;
-  struct ui ui;
-
-  state_init(&st, &op, &mop);
-  ui_init(&st, &ui);
-
+  
   /* Run the game */
   run(&st, &ui, screen, tileset, typeface);
 
