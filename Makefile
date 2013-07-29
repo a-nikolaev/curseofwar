@@ -14,7 +14,7 @@ MANDIR = $(DESTDIR)$(MANPREFIX)/man6
 DOCDIR = $(DESTDIR)$(PREFIX)/share/doc/$(GAME_TITLE)
 
 # Game resources directory
-DATADIR ?= $(DESTDIR)$(PREFIX)/share/$(GAME_TITLE)
+#DATADIR ?= $(DESTDIR)$(PREFIX)/share/$(GAME_TITLE)
 IMAGESDIR = images
 
 SRCS_INDEP = grid.c state.c king.c network.c client.c server.c output-common.c main-common.c
@@ -33,9 +33,16 @@ EXECS = $(EXEC_NCURSES) $(EXEC_SDL)
 CFLAGS += -Wall -O2
 LDLIBS += -lm
 
-# Define a preprocessor variable DATADIR if DESTDIR is provided
-ifdef DESTDIR
-CFLAGS += -DDATADIR=\"$(DATADIR)\"
+# Define a C preprocessor variable DATADIR 
+# if DATADIR is provided directly, 
+# or otherwise if DESTDIR is provided (thus indirectly defining DATADIR)
+ifdef DATADIR
+ CPPFLAGS += -DDATADIR=\"$(DATADIR)\"
+else
+ ifdef DESTDIR
+  DATADIR = $(DESTDIR)$(PREFIX)/share/$(GAME_TITLE)
+  CPPFLAGS += -DDATADIR=\"$(DATADIR)\"
+ endif
 endif
 
 # Common sources and header
@@ -49,8 +56,8 @@ ifdef SDL
  LDLIBS += $(shell sdl-config --libs)
  EXEC = $(EXEC_SDL)
  # Install and uninstall resources
- INSTALL_OPTIONAL = install-res-dir install-images install-sdl-manpage
- UNINSTALL_OPTIONAL = uninstall-images uninstall-res-dir uninstall-sdl-manpage
+ INSTALL_OPTIONAL = install-data-dir install-images install-sdl-manpage
+ UNINSTALL_OPTIONAL = uninstall-images uninstall-data-dir uninstall-sdl-manpage
 else
  OBJS += $(OBJS_NCURSES)
  HDRS += $(HDRS_NCURSES)
@@ -77,7 +84,7 @@ $(EXEC): $(OBJS) $(HDRS)
 
 
 # Install
-install-res-dir:
+install-data-dir:
 	$(INSTALL) -m 755 -d $(DATADIR)
 install-images:
 	$(INSTALL) -m 755 -d $(DATADIR)/$(IMAGESDIR)
@@ -99,7 +106,7 @@ install: all $(INSTALL_OPTIONAL)
 	-chmod 644 $(DOCDIR)/changelog.gz
 
 # Uninstall
-uninstall-res-dir:
+uninstall-data-dir:
 	-rmdir $(DATADIR)
 uninstall-images:
 	-rm $(DATADIR)/$(IMAGESDIR)/*
