@@ -28,7 +28,7 @@
 #include "output-sdl.h"
 #include "main-common.h"
 
-#include "config.h"
+#define IMAGES_SUFFIX "/images/"
 
 /* delay in milliseconds */
 #define TIME_DELAY 10
@@ -134,12 +134,12 @@ int main(int argc, char *argv[]) {
   SDL_EnableKeyRepeat(300, 30);
 
   /* Load Images */
-  SDL_Surface *tileset;
   char *filename = (char*) malloc(sizeof(char) * (strlen(DATADIR) + strlen(IMAGES_SUFFIX) + 256));
-
+  
+  SDL_Surface *tileset;
   sprintf(filename, "%s%stileset.bmp", DATADIR, IMAGES_SUFFIX);
-  printf("%s\n", filename);
   if ( load_image(filename, &tileset) != 0) return 1;
+  
   SDL_Surface *typeface;
   sprintf(filename, "%s%stype.bmp", DATADIR, IMAGES_SUFFIX);
   if ( load_image(filename, &typeface) != 0) return 1;

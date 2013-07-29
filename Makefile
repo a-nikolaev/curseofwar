@@ -16,18 +16,12 @@ DOCDIR = $(DESTDIR)$(PREFIX)/share/doc/$(GAME_TITLE)
 # Game resources directory
 DATADIR ?= $(DESTDIR)$(PREFIX)/share/$(GAME_TITLE)
 IMAGESDIR = images
-# edit config.h
-ifdef DESTDIR 
- EDIT_GAME_PATH = edit_config_h
-else
- EDIT_GAME_PATH = copy_default_config_h
-endif
 
 SRCS_INDEP = grid.c state.c king.c network.c client.c server.c output-common.c main-common.c
 SRCS_NCURSES = output.c main.c 
 SRCS_SDL = output-sdl.c main-sdl.c
 
-HDRS_INDEP = common.h messaging.h config.h $(SRCS_INDEP:.c=.h)
+HDRS_INDEP = common.h messaging.h $(SRCS_INDEP:.c=.h)
 HDRS_NCURSES = output.h
 HDRS_SDL = output-sdl.h
 
@@ -39,10 +33,15 @@ EXECS = $(EXEC_NCURSES) $(EXEC_SDL)
 CFLAGS += -Wall -O2
 LDLIBS += -lm
 
-# SDL or ncurses
+# Define a preprocessor variable DATADIR if DESTDIR is provided
+ifdef DESTDIR
+CFLAGS += -DDATADIR=\"$(DATADIR)\"
+endif
+
+# Common sources and header
 OBJS = $(OBJS_INDEP) 
 HDRS = $(HDRS_INDEP) 
-GAME_CONFIG := 
+# SDL or ncurses
 ifdef SDL
  OBJS += $(OBJS_SDL)
  HDRS += $(HDRS_SDL)
@@ -66,13 +65,6 @@ VERSION=`cat VERSION`
 
 # Build
 all: $(EXEC)
-
-edit_config_h:
-	-sed 's|"."|"$(DATADIR)"|' < default_config.h > config.h
-copy_default_config_h:
-	-cp default_config.h config.h
-
-config.h: $(EDIT_GAME_PATH)
 
 clean:
 	-rm -f $(OBJS_INDEP) $(OBJS_NCURSES) $(OBJS_SDL) $(EXECS)

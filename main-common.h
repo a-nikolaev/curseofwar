@@ -26,6 +26,10 @@
 #define DEF_SERVER_PORT "19140"
 #define DEF_CLIENT_PORT "19150"
 
+#ifndef DATADIR
+# define DATADIR "."
+#endif
+
 int game_slowdown (int speed);
 
 void print_help();
