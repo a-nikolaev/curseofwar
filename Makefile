@@ -68,7 +68,7 @@ VERSION=`cat VERSION`
 all: $(EXEC)
 
 edit_config_h:
-	-sed 's|"./data"|"$(DATADIR)"|' < default_config.h > config.h
+	-sed 's|"."|"$(DATADIR)"|' < default_config.h > config.h
 copy_default_config_h:
 	-cp default_config.h config.h
 

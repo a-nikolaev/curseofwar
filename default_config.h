@@ -18,5 +18,5 @@
  
 ******************************************************************************/
 
-#define DATADIR "./data"
+#define DATADIR "."
 #define IMAGES_SUFFIX "/images/"
