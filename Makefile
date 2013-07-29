@@ -4,20 +4,30 @@ INSTALL = install
 EXEC_NCURSES = curseofwar
 EXEC_SDL = curseofwar-sdl
 
-NAME_GENERIC = curseofwar
+GAME_TITLE = $(EXEC_NCURSES)
 
 PREFIX ?= /usr
 MANPREFIX = $(PREFIX)/share/man
 
 BINDIR = $(DESTDIR)$(PREFIX)/bin
 MANDIR = $(DESTDIR)$(MANPREFIX)/man6
-DOCDIR = $(DESTDIR)$(PREFIX)/share/doc/$(EXEC)
+DOCDIR = $(DESTDIR)$(PREFIX)/share/doc/$(GAME_TITLE)
+
+# Game resources directory
+DATADIR ?= $(DESTDIR)$(PREFIX)/share/$(GAME_TITLE)
+IMAGESDIR = images
+# edit config.h
+ifdef DESTDIR 
+ EDIT_GAME_PATH = edit_config_h
+else
+ EDIT_GAME_PATH = copy_default_config_h
+endif
 
 SRCS_INDEP = grid.c state.c king.c network.c client.c server.c output-common.c main-common.c
 SRCS_NCURSES = output.c main.c 
 SRCS_SDL = output-sdl.c main-sdl.c
 
-HDRS_INDEP = common.h messaging.h $(SRCS_INDEP:.c=.h)
+HDRS_INDEP = common.h messaging.h config.h $(SRCS_INDEP:.c=.h)
 HDRS_NCURSES = output.h
 HDRS_SDL = output-sdl.h
 
@@ -32,25 +42,37 @@ LDLIBS += -lm
 # SDL or ncurses
 OBJS = $(OBJS_INDEP) 
 HDRS = $(HDRS_INDEP) 
+GAME_CONFIG := 
 ifdef SDL
  OBJS += $(OBJS_SDL)
  HDRS += $(HDRS_SDL)
  CFLAGS += $(shell sdl-config --cflags)
  LDLIBS += $(shell sdl-config --libs)
  EXEC = $(EXEC_SDL)
+ # Install and uninstall resources
+ INSTALL_OPTIONAL = install-res-dir install-images install-sdl-manpage
+ UNINSTALL_OPTIONAL = uninstall-images uninstall-res-dir uninstall-sdl-manpage
 else
  OBJS += $(OBJS_NCURSES)
  HDRS += $(HDRS_NCURSES)
  LDLIBS += -lncurses
  EXEC = $(EXEC_NCURSES)
+ #No need to install/uninstall resources here, unless we make campaingns
 endif
 
 VERSION=`cat VERSION`
 
 .PHONY: all clean cleanall
 
-
+# Build
 all: $(EXEC)
+
+edit_config_h:
+	-sed 's|"./data"|"$(DATADIR)"|' < default_config.h > config.h
+copy_default_config_h:
+	-cp default_config.h config.h
+
+config.h: $(EDIT_GAME_PATH)
 
 clean:
 	-rm -f $(OBJS_INDEP) $(OBJS_NCURSES) $(OBJS_SDL) $(EXECS)
@@ -61,22 +83,43 @@ clean:
 $(EXEC): $(OBJS) $(HDRS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $(EXEC)
 
-install: all
+
+# Install
+install-res-dir:
+	$(INSTALL) -m 755 -d $(DATADIR)
+install-images:
+	$(INSTALL) -m 755 -d $(DATADIR)/$(IMAGESDIR)
+	for file in $(IMAGESDIR)/*; do \
+		$(INSTALL) -m 0644 $$file $(DATADIR)/$(IMAGESDIR); \
+	done
+install-sdl-manpage:
+	$(INSTALL) -m 755 -d $(MANDIR)
+	-sed "s/%VERSION%/$(VERSION)/g" $(EXEC_SDL).6 | gzip -c > $(MANDIR)/$(EXEC_SDL).6.gz
+	-chmod 644 $(MANDIR)/$(GAME_TITLE).6.gz
+
+install: all $(INSTALL_OPTIONAL) 
 	$(INSTALL) -m 755 -D $(EXEC) $(BINDIR)/$(EXEC)
 	$(INSTALL) -m 755 -d $(MANDIR)
-	-sed "s/%VERSION%/$(VERSION)/g" $(EXEC).6 | gzip -c > $(MANDIR)/$(EXEC).6.gz
-	-chmod 644 $(MANDIR)/$(EXEC).6.gz
+	-sed "s/%VERSION%/$(VERSION)/g" $(GAME_TITLE).6 | gzip -c > $(MANDIR)/$(GAME_TITLE).6.gz
+	-chmod 644 $(MANDIR)/$(GAME_TITLE).6.gz
 	$(INSTALL) -m 755 -d $(DOCDIR)
 	-cat CHANGELOG | gzip -c > $(DOCDIR)/changelog.gz
 	-chmod 644 $(DOCDIR)/changelog.gz
 
-install-strip:
-	$(INSTALL) -D -s $(EXEC) $(BINDIR)/$(EXEC)
+# Uninstall
+uninstall-res-dir:
+	-rmdir $(DATADIR)
+uninstall-images:
+	-rm $(DATADIR)/$(IMAGESDIR)/*
+	-rmdir $(DATADIR)/$(IMAGESDIR)
+uninstall-sdl-manpage:
+	-rm -f $(MANDIR)/$(EXEC_SDL).6.gz
 
-uninstall:
+uninstall: $(UNINSTALL_OPTIONAL)
 	-rm $(BINDIR)/$(EXEC)
-	-rm -f $(MANDIR)/$(EXEC).6.gz
+	-rm -f $(MANDIR)/$(GAME_TITLE).6.gz
 	-rm $(DOCDIR)/changelog.gz
+	-rmdir $(DOCDIR)
 
 show-path:
 	@echo would install to ${BINDIR}

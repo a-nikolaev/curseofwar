@@ -1,0 +1,142 @@
+.TH CURSEOFWAR-SDL "6" "July 2013" "curseofwar-sdl" "v%VERSION%"
+.SH NAME
+curseofwar-sdl \- An SDL version of the game curseofwar.
+.SH SYNOPSIS
+.B curseofwar
+[
+.B \-c
+.I port
+]
+[
+.B \-C
+.I IP
+]
+[
+.B \-d
+.I difficulty
+]
+[
+.B \-e
+.I port
+]
+.PD 0
+.IP
+.PD
+[
+.B \-E
+.I clients
+]
+[
+.B \-h
+]
+[
+.B \-H
+.I height
+]
+[
+.B \-i
+.I inequality
+]
+.PD 0
+.IP
+.PD
+[
+.B \-l
+.I countries
+]
+[
+.B \-q
+.I quality
+]
+[
+.B \-r
+]
+[
+.B \-R
+.I seed
+]
+[
+.B \-s
+.I speed
+]
+[
+.B \-S
+.I shape
+]
+[
+.B \-T
+]
+[
+.B \-W
+.I width
+]
+.SH DESCRIPTION
+See the main CURSEOFWAR manpage for detailed information about the game. 
+The SDL version provides the same command line arguments as the original ncurses version.
+.SH OPTIONS
+.TP
+\fB\-c\fR \fIport\fR
+Clients's port (19150 is default).
+.TP
+\fB\-C\fR \fIIP\fR
+Start a client and connect to the provided server's IP\-address.
+.TP
+\fB\-d\fR [ee|e|n|h|hh]
+Difficulty level (AI) from the easiest to the hardest (default is normal).
+.TP
+\fB\-e\fR \fIport\fR
+Server's port (19140 is default).
+.TP
+\fB\-E\fR [1|2| ... L]
+Start a server for not more than L clients.
+.TP
+\fB\-h\fR
+Display this help
+.TP
+\fB\-H\fR \fIheight\fR
+Map height (default is 21, maximum is 29)
+.TP
+\fB\-i\fR [0|1|2|3|4]
+Inequality between the countries (0 is the lowest, 4 in the highest).
+.TP
+\fB\-l\fR [2|3| ... N]
+Sets L, the number of countries (default is N).
+.TP
+\fB\-q\fR [1|2| ... L]
+Choose player's location by its quality (1 = the best available on the map, L = the worst). Only in the singleplayer mode.
+.TP
+\fB\-r\fR
+Absolutely random initial conditions, overrides options \fB\-l\fR, \fB\-i\fR, and \fB\-q\fR.
+.TP
+\fB\-R\fR \fIseed\fR
+Specify a random seed (unsigned integer) for map generation.
+.TP
+\fB\-s\fR [p|sss|ss|s|n|f|ff|fff]
+Game speed from the slowest to the fastest (default is normal).
+.TP
+\fB\-S\fR [rhombus|rect|hex]
+Map shape (rectangle is default). Max number of countries N=4 for rhombus and rectangle, and N=6 for the hexagon.
+.TP
+\fB\-T\fR 
+Show the timeline.
+.TP
+\fB\-W\fR \fIwidth\fR
+Map width (default is 21, maximum is 40)
+.SH AUTHORS
+.B Game:
+.br
+Alexey Nikolaev <koiwai at lavabit dot com>
+.br
+.B Makefile:
+.br
+Maximilian Dietrich <dxm at lavabit dot com>
+.br
+Anton Balashov <sicness at darklogic dot ru>
+.br
+Kirill Dmitrenko <kdmitrenko at gmail dot com>
+.br
+.B Manpage:
+.br
+Anton Balashov <sicness at darklogic dot ru>
+.br
+Maximilian Dietrich <dxm at lavabit dot com>

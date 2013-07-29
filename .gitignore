@@ -1,5 +1,6 @@
 *.o
 *~
 *.swp
+config.h
 /curseofwar
 /curseofwar-sdl

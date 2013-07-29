@@ -28,6 +28,8 @@
 #include "output-sdl.h"
 #include "main-common.h"
 
+#include "config.h"
+
 /* delay in milliseconds */
 #define TIME_DELAY 10
 
@@ -133,15 +135,23 @@ int main(int argc, char *argv[]) {
 
   /* Load Images */
   SDL_Surface *tileset;
-  if ( load_image("images/tileset.bmp", &tileset) != 0) return 1;
+  char *filename = (char*) malloc(sizeof(char) * (strlen(DATADIR) + strlen(IMAGES_SUFFIX) + 256));
+
+  sprintf(filename, "%s%stileset.bmp", DATADIR, IMAGES_SUFFIX);
+  printf("%s\n", filename);
+  if ( load_image(filename, &tileset) != 0) return 1;
   SDL_Surface *typeface;
-  if ( load_image("images/type.bmp", &typeface) != 0) return 1;
+  sprintf(filename, "%s%stype.bmp", DATADIR, IMAGES_SUFFIX);
+  if ( load_image(filename, &typeface) != 0) return 1;
   
+  free(filename);
+
   /* Run the game */
   run(&st, &ui, screen, tileset, typeface);
 
   /* Finalize */
   SDL_FreeSurface(tileset);
+  SDL_FreeSurface(typeface);
   
   if (!mop.multiplayer_flag || mop.server_flag)
     printf ("Random seed was %i\n", st.map_seed);

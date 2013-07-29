@@ -110,10 +110,6 @@ int get_options(int argc, char *argv[], struct basic_options *op, struct multi_o
   mop->multiplayer_flag = 0;
   mop->server_flag = 1;
   
-  free(mop->val_client_port);
-  free(mop->val_server_addr);
-  free(mop->val_server_port);
-
   mop->val_client_port = strdup(DEF_CLIENT_PORT);
   mop->val_server_addr = strdup(DEF_SERVER_ADDR);
   mop->val_server_port = strdup(DEF_SERVER_PORT);
