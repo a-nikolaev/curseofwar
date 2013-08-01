@@ -55,8 +55,8 @@ struct timeline {
  */
 struct basic_options {
   int keep_random_flag;
-  int dif;
-  int speed;
+  enum config_dif dif;
+  enum config_speed speed;
   int w;
   int h;
   int loc_num;  // the number of starting locations
