@@ -21,6 +21,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include "SDL.h"
+#ifdef WIN32
+#undef main
+#endif
 
 #include "grid.h"
 #include "common.h"
