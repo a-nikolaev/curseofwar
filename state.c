@@ -47,9 +47,9 @@ enum config_speed slower(enum config_speed sp){
 
 void state_init(struct state *s, struct basic_options *op, struct multi_options *mop){
  
-  s->speed = op->speed;
-  s->prev_speed = s->speed;
-  s->dif = op->dif;
+  s->speed = (config_speed)op->speed;
+  s->prev_speed = (config_speed)s->speed;
+  s->dif = (config_dif)op->dif;
   s->map_seed = op->map_seed;
   s->conditions = op->conditions;
   s->inequality = op->inequality;
@@ -129,7 +129,7 @@ void state_init(struct state *s, struct basic_options *op, struct multi_options 
 
   /* kings evaluate the map */
   for(p = 0; p < s->kings_num; ++p) {
-    king_evaluate_map(&s->king[p], &s->grid, op->dif);
+    king_evaluate_map(&s->king[p], &s->grid, (config_dif)op->dif);
   }
 
   /* Zero timeline */

@@ -19,11 +19,15 @@
 ******************************************************************************/
 
 #include <stdio.h>
-#include <getopt.h>
 #include <string.h>
 #include "common.h"
 #include "state.h"
 #include "main-common.h"
+
+#ifndef WIN32 // For now, we deactivate command line options parsing for windows versions
+  #include <getopt.h>
+#endif
+
 
 void print_help() {
   printf(
@@ -115,6 +119,7 @@ int get_options(int argc, char *argv[], struct basic_options *op, struct multi_o
   mop->val_server_port = strdup(DEF_SERVER_PORT);
   
   int conditions_were_set = 0;
+#ifndef WIN32
   opterr = 0;
   int c;
   while ((c = getopt (argc, argv, "hrTW:H:i:l:q:d:s:R:S:E:e:C:c:")) != -1){
@@ -238,6 +243,7 @@ int get_options(int argc, char *argv[], struct basic_options *op, struct multi_o
           return 1;
     }
   }
+#endif
   /* Adjust l_val and conditions_val */
   int avlbl_loc_num = stencil_avlbl_loc_num (op->shape);
   if(op->loc_num == 0) op->loc_num = avlbl_loc_num;

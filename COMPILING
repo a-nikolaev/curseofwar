@@ -1,0 +1,43 @@
+How to compile using cmake
+==========================
+
+CMake is a tool that generates build files for a variety of platforms. It uses the configuration file CMakeLists.txt.
+
+Linux
+=====
+
+Create a directory where you want cmake to put all his temporary files. (I usually call mine build/) Go there and invoke the cmake command with the path to the CMakeLists.txt file :
+
+mkdir build
+cd build
+cmake ..
+
+This will generate a default Unix Makefile. You can then build:
+
+make
+
+If you want to customize the build, use ccmake instead of cmake:
+
+ccmake ..
+
+It will open a ncurse interface where you can change various parameters. Press 'c' to initialize them to the default values. Change them as desired, and hit 'g'. It will generate customized Makefiles.
+
+Note that executable will fail if they are not run from the directory containing images/ and pixmaps/
+
+Windows
+=======
+
+You will need the SDL development libraries installed on your computer.
+
+There are several possibilities. I am using cmake-gui.
+
+- Fill the "source code" field with the path to the root directory of curseofwar
+- Fill the "binairies" field with the path of your build directory
+- Press "Configure"
+- If your SDL install is at a custom location, you will need to fill the appropriate fields and hit "configure" again.
+- Under windows, you will need to uncheck "CW_NCURSE_FRONTEND" and "CW_SDL_MULTIPLAYER"
+- Press "Generate"
+- A project file was created in the build directory. Use it to build the projects.
+
+Note that executable will fail if they are not run from the directory containing images/ and pixmaps/
+
