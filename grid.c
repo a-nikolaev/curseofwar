@@ -44,8 +44,6 @@ int is_visible(enum tile_class t) {
   }
 }
 
-const struct loc dirs[DIRECTIONS] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {1,-1}, {-1, 1}};
-
 void grid_init(struct grid *g, int w, int h){
   g->width = MIN(w, MAX_WIDTH);
   g->height = MIN(h, MAX_HEIGHT);
