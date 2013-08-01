@@ -4,6 +4,15 @@ PROJECT( curseofwar )
 
 find_package(SDL)
 
+option(NCURSE_FRONTEND "Compile the NCurses frontend" ON)
+
+if(SDL_FOUND)
+    option(SDL_FRONTEND "Compile the SDL frontend" ON)
+    option(MULTIPLAYER "Include multiplayer mode support in the SDL frontend" ON)
+endif(SDL_FOUND)
+
+
+
 SET (SOURCE_COMMON     grid.c 
                        state.c 
                        king.c 
@@ -16,17 +25,28 @@ SET (SOURCE_SDL     output-sdl.c
 SET (SOURCE_NCURSES output.c
                     main.c)
 
+
 SET (SOURCE_NETWORK network.c
                     client.c
                     server.c)
 
-ADD_EXECUTABLE(curseofwar ${SOURCE_COMMON} ${SOURCE_NCURSES} ${SOURCE_NETWORK})
-TARGET_LINK_LIBRARIES( curseofwar m ncurses )
+SET (SOURCES ${SOURCE_COMMON} ${SOURCE_SDL} ${SOURCE_NCURSES} ${SOURCE_NETWORK})                    
+set_source_files_properties( ${SOURCES} PROPERTIES LANGUAGE "CXX" )                    
+                    
+if(NCURSE_FRONTEND)
+    ADD_EXECUTABLE(curseofwar ${SOURCE_COMMON} ${SOURCE_NCURSES} ${SOURCE_NETWORK})
+    TARGET_LINK_LIBRARIES( curseofwar m ncurses )
+endif(NCURSE_FRONTEND)
 
-if(SDL_FOUND)
+if(SDL_FRONTEND)
     include_directories(  ${SDL_INCLUDE_DIR}
                           ${INCLUDE_DIRECTORIES}  )
-    ADD_EXECUTABLE(curseofwar-sdl ${SOURCE_COMMON} ${SOURCE_SDL} ${SOURCE_NETWORK})
+    
+    if(MULTIPLAYER)
+        SET(SOURCE_OPTIONAL ${SOURCE_NETWORK})
+    endif(MULTIPLAYER)
+
+    ADD_EXECUTABLE(curseofwar-sdl ${SOURCE_COMMON} ${SOURCE_OPTIONAL} ${SOURCE_SDL})
     TARGET_LINK_LIBRARIES(curseofwar-sdl m ${SDL_LIBRARY} )
-endif(SDL_FOUND)
+endif(SDL_FRONTEND)
 
