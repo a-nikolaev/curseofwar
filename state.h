@@ -36,7 +36,8 @@ enum config_speed slower(enum config_speed);
 
 struct ui {
   struct loc cursor;
-  int xskip;
+  int xskip; /* number of tiles to skip in the beginning of every line */
+  int xlength; /* total max number of tiles in horizontal direction */
 };
 
 /* struct timeline */
@@ -46,6 +47,36 @@ struct timeline {
   int mark; /* the most recently updated time mark.
                It can be used as index in two other fields, i.e.
                0 <= mark < MAX_TIMELINE_MARK */
+};
+
+
+/*
+ struct basic_options
+ */
+struct basic_options {
+  int keep_random_flag;
+  int dif;
+  int speed;
+  int w;
+  int h;
+  int loc_num;  // the number of starting locations
+  unsigned int map_seed;
+  int conditions;
+  int timeline_flag;
+
+  int inequality;
+  enum stencil shape;
+};
+
+/* multiplayer arguments */
+struct multi_options {
+  int multiplayer_flag;
+  int server_flag;
+  
+  char* val_client_port;
+  char* val_server_addr;
+  char* val_server_port;
+  int clients_num;
 };
 
 
@@ -72,7 +103,6 @@ struct timeline {
  */
 struct state {
   struct grid grid;
-  /* struct loc cursor; */
   struct flag_grid fg [MAX_PLAYER];
   struct king king [MAX_PLAYER];
   int kings_num;
@@ -97,24 +127,20 @@ struct state {
 };
 
 /*
-  state_init(&s, w, h, keep_random, speed, dif)
+  state_init(&s, &op)
 
     initializes state s.
 
-    w and h are the map dimensions
-    
-    if keep_random == 1, the map is kept random,
-    otherwise city and player placement is not arbitrary, 
-      but players have their initial locations in the corners of the map.
-      function conflict() is used to generate this game mode
+    op is a struct basic_options
  */
-void state_init(struct state *s, int w, int h, enum stencil shape,
-    unsigned int map_seed, int keep_random, int locations_num, int clients_num,
-    int conditions, int inequality, enum config_speed speed, enum config_dif dif,
-    int timeline_flag);
+void state_init(struct state *s, struct basic_options *op, struct multi_options *mop);
 
 /* compute the cursor location, and xskip */
 void ui_init(struct state *s, struct ui *ui);
+
+/* Try to change the cursor position with new values cursi, cursj. Adjust if necessary */
+void adjust_cursor(struct state *s, struct ui *ui, int cursi, int cursj);
+
 
 /* 
   kings_move(&s)

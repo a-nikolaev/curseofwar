@@ -36,6 +36,7 @@
 #include "messaging.h"
 #include "client.h"
 #include "server.h"
+#include "main-common.h"
 
 /*****************************************************************************/
 /*                           Global Constants                                */
@@ -44,64 +45,10 @@
 volatile   sig_atomic_t   input_ready;
 volatile   sig_atomic_t   time_to_redraw;
  
-#define DEF_SERVER_ADDR "127.0.0.1"
-#define DEF_SERVER_PORT "19140"
-#define DEF_CLIENT_PORT "19150"
-
 void on_timer(int signum);   /* handler for alarm     */
 int  update_from_input( struct state *st, struct ui *ui );
 int  update_from_input_client( struct state *st, struct ui *ui, int sfd, struct addrinfo *srv_addr);
 int  update_from_input_server( struct state *st );
-
-void print_help() {
-  printf(
-"                                 __                      \n"
-"    ____                        /  ]                     \n"
-"   / __ \\_ _ ___ ___ ___    __ _| |_  /\\      /\\___ ___  \n"
-" _/ /  \\/ | |X _/ __/ __\\  /   \\   /  \\ \\ /\\ / /__ \\X _/ \n"
-" \\ X    | | | | |__ | __X  | X || |    \\ V  V // _ | |   \n"
-"  \\ \\__/\\ __X_| \\___/___/  \\___/| |     \\ /\\ / \\___X_|   \n"
-"   \\____/                       |/       V  V            \n"
-"\n"
-"  Written by Alexey Nikolaev in 2013.\n"
-"\n");
-  
-  printf("  Command line arguments:\n\n");
-  printf(
-    "-W width\n"
-    "\tMap width (default is 21)\n\n"
-    "-H height\n"
-    "\tMap height (default is 21)\n\n"
-    "-S [rhombus|rect|hex]\n"
-    "\tMap shape (rectangle is default). Max number of countries N=4 for rhombus and rectangle, and N=6 for the hexagon.\n\n"
-    "-l [2|3| ... N]\n"
-    "\tSets L, the number of countries (default is N).\n\n"
-    "-i [0|1|2|3|4]\n"
-    "\tInequality between the countries (0 is the lowest, 4 in the highest).\n\n"
-    "-q [1|2| ... L]\n"
-    "\tChoose player's location by its quality (1 = the best available on the map, L = the worst). Only in the singleplayer mode.\n\n"
-    "-r\n"
-    "\tAbsolutely random initial conditions, overrides options -l, -i, and -q.\n\n"
-    "-d [ee|e|n|h|hh]\n"
-    "\tDifficulty level (AI) from the easiest to the hardest (default is normal).\n\n"
-    "-s [p|sss|ss|s|n|f|ff|fff]\n"
-    "\tGame speed from the slowest to the fastest (default is normal).\n\n"
-    "-R seed\n"
-    "\tSpecify a random seed (unsigned integer) for map generation.\n\n"
-    "-T\n"
-    "\tShow the timeline.\n\n"
-    "-E [1|2| ... L]\n"
-    "\tStart a server for not more than L clients.\n\n"
-    "-e port\n"
-    "\tServer's port (19140 is default).\n\n"
-    "-C IP\n"
-    "\tStart a client and connect to the provided server's IP-address.\n\n"
-    "-c port\n"
-    "\tClients's port (19150 is default).\n\n"
-    "-h\n"
-    "\tDisplay this help \n\n"
-  );
-}
 
 void win_or_lose(struct state *st, int k) {
   int i, j, p;
@@ -135,21 +82,6 @@ void win_or_lose(struct state *st, int k) {
     attrset(A_BOLD | COLOR_PAIR(2));
     mvaddstr(2 + st->grid.height, 31, "You are defeated!");
   }
-}
-
-int game_slowdown (int speed) {
-  int slowdown = 20;
-  switch (speed) {
-    case sp_pause: slowdown = 1; break;
-    case sp_slowest: slowdown = 160; break;
-    case sp_slower: slowdown = 80; break;
-    case sp_slow: slowdown = 40; break;
-    case sp_normal: slowdown = 20; break;
-    case sp_fast: slowdown = 10; break;
-    case sp_faster: slowdown = 5; break;
-    case sp_fastest: slowdown = 2; break;
-  }
-  return slowdown;
 }
 
 /* Run the game */
@@ -327,179 +259,12 @@ int main(int argc, char* argv[]){
   /* Initialize pseudo random number generator */
   srand(time(NULL));
 
-  /* Parse argv */
-  int r_flag = 0; // random
-  int dif_val = dif_normal; // diffiulty
-  int sp_val = sp_normal; // speed
-  int w_val = 21; // width
-  int h_val = 21; // height
-  int l_val = 0;  // the number of starting locations
-  unsigned int seed_val = rand();
-  int conditions_val = 0;
-  int conditions_were_set = 0;
-  int timeline_flag = 0;
-
-  int ineq_val = RANDOM_INEQUALITY;
-  enum stencil shape_val = st_rect;
-
-  /* multiplayer option */
-  int multiplayer_flag = 0;
-  int server_flag = 1;
-  
-  char* val_client_port = strdup(DEF_CLIENT_PORT);
-  char* val_server_addr = strdup(DEF_SERVER_ADDR);
-  char* val_server_port = strdup(DEF_SERVER_PORT);
-
-  int val_clients_num = 1;
-
-  opterr = 0;
-  int c;
-  while ((c = getopt (argc, argv, "hrTW:H:i:l:q:d:s:R:S:E:e:C:c:")) != -1){
-    switch(c){
-      case 'r': r_flag = 1; break;
-      case 'T': timeline_flag = 1; break;
-      //case 'f': f_val = optarg; break;
-      case 'W': { char* endptr = NULL;
-                  w_val = MAX(14, strtol(optarg, &endptr, 10));
-                  if (*endptr != '\0') {
-                    print_help();
-                    return 1;
-                  }
-                };
-                break;
-      case 'H': { char* endptr = NULL;
-                  h_val = MAX(14, strtol(optarg, &endptr, 10));
-                  if (*endptr != '\0') {
-                    print_help();
-                    return 1;
-                  }
-                };
-                break;
-      case 'i': { char* endptr = NULL;
-                  ineq_val = strtol(optarg, &endptr, 10);
-                  if (*endptr != '\0' || ineq_val < 0 || ineq_val > 4) {
-                    print_help();
-                    return 1;
-                  }
-                };
-                break;
-      case 'l': { char* endptr = NULL;
-                  l_val = strtol(optarg, &endptr, 10);
-                  if (*endptr != '\0') {
-                    print_help();
-                    return 1;
-                  }
-                };
-                break;
-      case 'q': { char* endptr = NULL;
-                  conditions_val = strtol(optarg, &endptr, 10);
-                  conditions_were_set = 1;
-                  if (*endptr != '\0') {
-                    print_help();
-                    return 1;
-                  }
-                };
-                break;
-      case 'R': { char* endptr = NULL;
-                  seed_val = abs(strtol(optarg, &endptr, 10));
-                  if (*endptr != '\0' || *optarg == '\0') {
-                    print_help();
-                    return 1;
-                  }
-                };
-                break;
-      case 'd': if (strcmp(optarg, "n") == 0) dif_val = dif_normal;
-                else if (strcmp(optarg, "e") == 0) dif_val = dif_easy;
-                else if (strcmp(optarg, "e1") == 0) dif_val = dif_easy;
-                else if (strcmp(optarg, "ee") == 0) dif_val = dif_easiest;
-                else if (strcmp(optarg, "e2") == 0) dif_val = dif_easiest;
-                else if (strcmp(optarg, "h") == 0) dif_val = dif_hard;
-                else if (strcmp(optarg, "h1") == 0) dif_val = dif_hard;
-                else if (strcmp(optarg, "hh") == 0) dif_val = dif_hardest;
-                else if (strcmp(optarg, "h2") == 0) dif_val = dif_hardest;
-                else {
-                  print_help();
-                  return 1;
-                }
-                break;
-      case 's': if (strcmp(optarg, "n") == 0) sp_val = sp_normal;
-                else if (strcmp(optarg, "s") == 0 || strcmp(optarg, "s1") == 0) sp_val = sp_slow;
-                else if (strcmp(optarg, "ss") == 0 || strcmp(optarg, "s2") == 0) sp_val = sp_slower;
-                else if (strcmp(optarg, "sss") == 0 || strcmp(optarg, "s3") == 0) sp_val = sp_slowest;
-                else if (strcmp(optarg, "f") == 0 || strcmp(optarg, "f1") == 0) sp_val = sp_fast;
-                else if (strcmp(optarg, "ff") == 0 || strcmp(optarg, "f2") == 0) sp_val = sp_faster;
-                else if (strcmp(optarg, "fff") == 0 || strcmp(optarg, "f3") == 0) sp_val = sp_fastest;
-                else if (strcmp(optarg, "p") == 0) sp_val = sp_pause;
-                else {
-                  print_help();
-                  return 1;
-                }
-                break;
-      case 'S': if (strcmp(optarg, "rhombus") == 0) shape_val = st_rhombus;
-                else if (strcmp(optarg, "rect") == 0) shape_val = st_rect;
-                else if (strcmp(optarg, "hex") == 0) shape_val = st_hex;
-                else {
-                  print_help();
-                  return 1;
-                }
-                break;
-
-                /* multiplayer-related options */
-      case 'E': { char* endptr = NULL;
-                  val_clients_num = strtol(optarg, &endptr, 10);
-                  if (*endptr != '\0') {
-                    print_help();
-                    return 1;
-                  }
-                  multiplayer_flag = 1;
-                  server_flag = 1; 
-                }
-                break;
-      case 'e':
-                free(val_server_port);
-                val_server_port = strdup(optarg);
-                break;
-      case 'C': 
-                multiplayer_flag = 1;
-                server_flag = 0; 
-                free(val_server_addr);
-                val_server_addr = strdup(optarg);
-                break;
-      case 'c':
-                free(val_client_port);
-                val_client_port = strdup(optarg);
-                break;
-      case '?': case 'h':
-          print_help();
-          return 1;
-      default: abort ();
-    }
-  }
-  /* Adjust l_val and conditions_val */
-  {
-    int avlbl_loc_num = stencil_avlbl_loc_num (shape_val);
-    if(l_val == 0) l_val = avlbl_loc_num;
-
-    if (l_val < 2 || l_val > avlbl_loc_num) {
-      print_help();
-      return 1;
-    }
-    if (conditions_were_set && (conditions_val<1 || conditions_val>l_val)) {
-      print_help();
-      return 1;
-    }
-
-    if (val_clients_num < 1 || val_clients_num > l_val) {
-      print_help();
-      return 1;
-    }
-
-    if (shape_val == st_rect) {
-      w_val = MIN(MAX_WIDTH-1, w_val+(h_val+1)/2);
-    }
-  }
-
-  
+  /* Read command line arguments */
+  struct basic_options op;
+  struct multi_options mop;
+  if (get_options(argc, argv, &op, &mop) == 1) return 1;
+ 
+  /* Setup signal handlers */
   struct sigaction newhandler;            /* new settings         */
   sigset_t         blocked;               /* set of blocked sigs  */
   newhandler.sa_flags = SA_RESTART;       /* options     */
@@ -542,7 +307,7 @@ int main(int argc, char* argv[]){
   mvaddstr(0,0,"Map is generated. Please wait.");
   refresh();
 
-  state_init(&st, w_val, h_val, shape_val, seed_val, r_flag, l_val, val_clients_num, conditions_val, ineq_val, sp_val, dif_val, timeline_flag);
+  state_init(&st, &op, &mop);
  
   ui_init(&st, &ui);
 
@@ -564,13 +329,13 @@ int main(int argc, char* argv[]){
   input_ready = 0;
   time_to_redraw = 1;
 
-  if (!multiplayer_flag) {
+  if (!mop.multiplayer_flag) {
     /* Run the game */
     run(&st, &ui);
   }
   else {
-    if (server_flag) run_server(&st, val_clients_num, val_server_port);
-    else run_client(&st, &ui, val_server_addr, val_server_port, val_client_port);
+    if (mop.server_flag) run_server(&st, mop.clients_num, mop.val_server_port);
+    else run_client(&st, &ui, mop.val_server_addr, mop.val_server_port, mop.val_client_port);
   }
 
   /* Restore the teminal state */
@@ -579,12 +344,12 @@ int main(int argc, char* argv[]){
   clear();
   endwin();
 
-  if (!multiplayer_flag || server_flag)
+  if (!mop.multiplayer_flag || mop.server_flag)
     printf ("Random seed was %i\n", st.map_seed);
 
-  free(val_server_addr);
-  free(val_server_port);
-  free(val_client_port);
+  free(mop.val_server_addr);
+  free(mop.val_server_port);
+  free(mop.val_client_port);
   return 0;
 }
 
@@ -628,76 +393,14 @@ int update_from_input( struct state *st, struct ui *ui )
     int finished=0;
 
     while ( fread(buf, 1, 1, stdin) == 1 ) {
-        c = buf[0];
-        int cursi = ui->cursor.i;
-        int cursj = ui->cursor.j;
-        /*ndelay = 0; */
-        switch (c) {
-            case 'Q':
-            case 'q': 
-                finished = dialog_quit_confirm(st, ui);                     /* quit program */
-                break;
-            case 'f':
-                st->prev_speed = st->speed;
-                st->speed = faster(st->speed);
-                break;
-            case 's':
-                st->prev_speed = st->speed;
-                st->speed = slower(st->speed);
-                break;
-            case 'p':
-                if (st->speed == sp_pause)
-                  st->speed = st->prev_speed;
-                else {
-                  st->prev_speed = st->speed;
-                  st->speed = sp_pause;
-                }
-                break;
-            case 'h': case K_LEFT:
-              cursi--;
-              break;
-            case 'l': case K_RIGHT:
-              cursi++;
-              break;
-            case 'k': case K_UP:
-              cursj--;
-              if (cursj % 2 == 1)
-                cursi++;
-              break;
-            case 'j': case K_DOWN:
-              cursj++;
-              if (cursj % 2 == 0)
-                cursi--;
-              break;
-            case ' ':
-              if (st->fg[st->controlled].flag[ui->cursor.i][ui->cursor.j] == 0)
-                add_flag (&st->grid, &st->fg[st->controlled], ui->cursor.i, ui->cursor.j, FLAG_POWER);
-              else
-                remove_flag (&st->grid, &st->fg[st->controlled], ui->cursor.i, ui->cursor.j, FLAG_POWER);
-              break;
-            case 'x':
-              remove_flags_with_prob (&st->grid, &st->fg[st->controlled], 1.0);
-              break;
-            case 'c':
-              remove_flags_with_prob (&st->grid, &st->fg[st->controlled], 0.5);
-              break;
-            case 'r':
-            case 'v':
-              build (&st->grid, &st->country[st->controlled], st->controlled, ui->cursor.i, ui->cursor.j);
-              break;
-            
-            case ESCAPE:
-            case 91:
-              break;
-            }
-        
-        cursi = IN_SEGMENT(cursi, 0, st->grid.width-1);
-        cursj = IN_SEGMENT(cursj, 0, st->grid.height-1);
-        if ( is_visible(st->grid.tiles[cursi][cursj].cl) ) {
-          ui->cursor.i = cursi;
-          ui->cursor.j = cursj;
-        }
-
+      c = buf[0];
+      switch(c){
+        case 'q': case 'Q':
+          finished = dialog_quit_confirm(st, ui);                     /* quit program */
+          break;
+        default:
+          finished = singleplayer_process_input (st, ui, c);
+      }
     }                
     return finished;
 }

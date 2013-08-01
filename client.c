@@ -45,7 +45,7 @@ int client_process_msg_s_state (struct state *st, struct msg_s_data *msg) {
 
   for (i=0; i<MAX_WIDTH; ++i) {
     for (j=0; j<MAX_HEIGHT; ++j) {
-      st->grid.tiles[i][j].cl = msg->tile[i][j];
+      st->grid.tiles[i][j].cl = (tile_class)msg->tile[i][j];
 
       for (p=0; p<MAX_PLAYER; ++p)
         st->grid.tiles[i][j].units[p][citizen] = 0;
@@ -155,13 +155,10 @@ int client_process_input (struct state *st, struct ui *ui, char c, int sfd, stru
       case 91:
         break;
       }
-  
-  cursi = IN_SEGMENT(cursi, 0, st->grid.width-1);
-  cursj = IN_SEGMENT(cursj, 0, st->grid.height-1);
-  if ( is_visible(st->grid.tiles[cursi][cursj].cl) ) {
-    ui->cursor.i = cursi;
-    ui->cursor.j = cursj;
-  }
+
+
+  adjust_cursor(st, ui, cursi, cursj);
+
   return 0; /* not finished */
 }
 

@@ -45,17 +45,14 @@ enum config_speed slower(enum config_speed sp){
   }
 }
 
-void state_init(struct state *s, int w, int h, enum stencil shape,
-    unsigned int map_seed, int keep_random, int locations_num, int clients_num, 
-    int conditions, int inequality, enum config_speed speed, enum config_dif dif,
-    int timeline_flag){
+void state_init(struct state *s, struct basic_options *op, struct multi_options *mop){
  
-  s->speed = speed;
-  s->prev_speed = s->speed;
-  s->dif = dif;
-  s->map_seed = map_seed;
-  s->conditions = conditions;
-  s->inequality = inequality;
+  s->speed = (config_speed)op->speed;
+  s->prev_speed = (config_speed)s->speed;
+  s->dif = (config_dif)op->dif;
+  s->map_seed = op->map_seed;
+  s->conditions = op->conditions;
+  s->inequality = op->inequality;
   s->time = (1850 + rand()%100) * 360 + rand()%360;
 
   /* player controlled from the keyboard */
@@ -65,17 +62,17 @@ void state_init(struct state *s, int w, int h, enum stencil shape,
 
   int all_players[] = {1, 2, 3, 4, 5, 6, 7};
   int comp_players[MAX_PLAYER]; 
-  int comp_players_num = 7 - clients_num;
+  int comp_players_num = 7 - mop->clients_num;
  
   s->kings_num = comp_players_num;
   int ui_players[MAX_PLAYER];
-  int ui_players_num = clients_num;
+  int ui_players_num = mop->clients_num;
   int i;
   for (i=0; i<7; ++i) {
-    if (i<clients_num)
+    if (i<mop->clients_num)
       ui_players[i] = all_players[i];
     else {
-      int j = i - clients_num; /* computer player index / king's index */
+      int j = i - mop->clients_num; /* computer player index / king's index */
       comp_players[j] = all_players[i];
       switch (i){
         case 1:
@@ -107,36 +104,36 @@ void state_init(struct state *s, int w, int h, enum stencil shape,
   {
     int conflict_code = 0;
     do {
-      grid_init(&s->grid, w, h);
+      grid_init(&s->grid, op->w, op->h);
   
       /* starting locations arrays */
       struct loc loc_arr[MAX_AVLBL_LOC];
       int available_loc_num = 0;
       int d = 2;
-      apply_stencil(shape, &s->grid, d, loc_arr, &available_loc_num);
+      apply_stencil(op->shape, &s->grid, d, loc_arr, &available_loc_num);
      
       /* conflict mode */
       conflict_code = 0;
-      if (!keep_random) 
+      if (!op->keep_random_flag) 
         conflict_code = conflict(&s->grid, loc_arr, available_loc_num, 
-            comp_players, comp_players_num, locations_num, ui_players, ui_players_num, s->conditions, s->inequality);
+            comp_players, comp_players_num, op->loc_num, ui_players, ui_players_num, s->conditions, s->inequality);
     } while(conflict_code != 0 || !is_connected(&s->grid));
   }
   /* Map is ready */
 
   int p;
   for(p = 0; p<MAX_PLAYER; ++p) {
-    flag_grid_init(&s->fg[p], w, h);
+    flag_grid_init(&s->fg[p], op->w, op->h);
     s->country[p].gold = 0;
   }
 
   /* kings evaluate the map */
   for(p = 0; p < s->kings_num; ++p) {
-    king_evaluate_map(&s->king[p], &s->grid, dif);
+    king_evaluate_map(&s->king[p], &s->grid, (config_dif)op->dif);
   }
 
   /* Zero timeline */
-  s->show_timeline = timeline_flag;
+  s->show_timeline = op->timeline_flag;
   s->timeline.mark = -1;
   for(i=0; i<MAX_TIMELINE_MARK; ++i) {
     s->timeline.time[i] = s->time;
@@ -162,15 +159,47 @@ void ui_init(struct state *s, struct ui *ui) {
     }
   }
   /* find the leftmost visible tile */
-  ui->xskip = MAX_WIDTH * 2 + 1; 
+  int xskip_x2 = MAX_WIDTH * 2 + 1;
+  int xrightmost_x2 = 0;
   for(i=0; i<s->grid.width; ++i)
     for(j=0; j<s->grid.height; ++j)
       if(is_visible(s->grid.tiles[i][j].cl)) {
         int x = i*2 + j;
-        if (ui->xskip > x)
-          ui->xskip = x;
+        if (xskip_x2 > x)
+          xskip_x2 = x;
+        if (xrightmost_x2 < x)
+          xrightmost_x2 = x;
       }
-  ui->xskip = ui->xskip/2;
+  ui->xskip = xskip_x2/2;
+  ui->xlength = (xrightmost_x2+1)/2 - xskip_x2/2;
+}
+
+void adjust_cursor(struct state *s, struct ui *ui, int cursi, int cursj) {
+  cursi = IN_SEGMENT(cursi, 0, s->grid.width-1);
+  cursj = IN_SEGMENT(cursj, 0, s->grid.height-1);
+  if ( is_visible(s->grid.tiles[cursi][cursj].cl) ) {
+    ui->cursor.i = cursi;
+    ui->cursor.j = cursj;
+  }
+  else if ( is_visible(s->grid.tiles[ui->cursor.i][cursj].cl) ) {
+    ui->cursor.j = cursj;
+  }
+  else {
+    int i = cursi-1;
+    i = IN_SEGMENT(i, 0, s->grid.width-1);
+    if (is_visible(s->grid.tiles[i][cursj].cl)) {
+      ui->cursor.i = i;
+      ui->cursor.j = cursj;
+    }
+    else{
+      i = cursi+1;
+      i = IN_SEGMENT(i, 0, s->grid.width-1);
+      if (is_visible(s->grid.tiles[i][cursj].cl)) {
+        ui->cursor.i = i;
+        ui->cursor.j = cursj;
+      }
+    }
+  }
 }
 
 #define GROWTH_1 1.10

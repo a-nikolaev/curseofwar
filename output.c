@@ -18,6 +18,7 @@
  
 ******************************************************************************/
 #include "output.h"
+#include "output-common.h"
 #include <curses.h>
 #include <string.h>
 
@@ -48,17 +49,6 @@ int player_style(int p) {
    return A_NORMAL | COLOR_PAIR(player_color(p));
 }
 
-void time_to_ymd(unsigned long time, int *y, int *m, int *d) {
-  int year = time/360;
-  int month = time - year*360;
-  int day = month%30 + 1;
-  month = month / 30 + 1;
-
-  *y = year;
-  *m = month;
-  *d = day;
-}
-
 /* Outputs population at the tile (i,j) */
 void output_units(struct ui *ui, struct tile *t, int i, int j) {
   int p;
@@ -67,24 +57,28 @@ void output_units(struct ui *ui, struct tile *t, int i, int j) {
     num += t->units[p][citizen];
   }
   move(POSY(ui,i,j), POSX(ui,i,j));
-  if (num > 400) 
-    addstr(":::"); 
-  else if (num > 200) 
-    addstr(".::"); 
-  else if (num > 100) 
-    addstr(" ::"); 
-  else if (num > 50) 
-    addstr(".:."); 
-  else if (num > 25) 
-    addstr(".: "); 
-  else if (num > 12) 
-    addstr(" : "); 
-  else if (num > 6) 
-    addstr("..."); 
-  else if (num > 3) 
-    addstr(".. "); 
-  else if (num > 0) 
-    addstr(" . "); 
+  switch (pop_to_symbol(num)) {
+    case 8: 
+      addstr(":::"); break;
+    case 7: 
+      addstr(".::"); break;
+    case 6:
+      addstr(" ::"); break;
+    case 5:
+      addstr(".:."); break;
+    case 4:
+      addstr(".: "); break;
+    case 3:
+      addstr(" : "); break;
+    case 2:
+      addstr("..."); break;
+    case 1:
+      addstr(".. "); break;
+    case 0:
+      addstr(" . "); break;
+    default:
+      return;
+  }
 }
 
 /* A function to display information about the available keys that can be used by the player */

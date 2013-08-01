@@ -98,7 +98,7 @@ struct loc {
 };
 
 /* There are 6 possible directions to move from a tile. Hexagonal geometry. */
-const struct loc dirs[DIRECTIONS];
+const struct loc dirs[DIRECTIONS] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {1,-1}, {-1, 1}};
 
 /* struct grid
  *
