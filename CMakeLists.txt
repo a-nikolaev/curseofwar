@@ -32,10 +32,17 @@ SET (SOURCE_NETWORK network.c
 
 SET (SOURCES ${SOURCE_COMMON} ${SOURCE_SDL} ${SOURCE_NCURSES} ${SOURCE_NETWORK})                    
 set_source_files_properties( ${SOURCES} PROPERTIES LANGUAGE "CXX" )                    
-                    
+
+if(WIN32)
+    # Windows includes the math lib by default, no need to add them
+    SET(COMMON_LIBS)
+else(WIN32)
+    SET(COMMON_LIBS m)
+endif(WIN32)
+
 if(NCURSE_FRONTEND)
     ADD_EXECUTABLE(curseofwar ${SOURCE_COMMON} ${SOURCE_NCURSES} ${SOURCE_NETWORK})
-    TARGET_LINK_LIBRARIES( curseofwar m ncurses )
+    TARGET_LINK_LIBRARIES( curseofwar ${COMMON_LIBS} ncurses )
 endif(NCURSE_FRONTEND)
 
 if(SDL_FRONTEND)
@@ -47,6 +54,10 @@ if(SDL_FRONTEND)
     endif(MULTIPLAYER)
 
     ADD_EXECUTABLE(curseofwar-sdl ${SOURCE_COMMON} ${SOURCE_OPTIONAL} ${SOURCE_SDL})
-    TARGET_LINK_LIBRARIES(curseofwar-sdl m ${SDL_LIBRARY} )
+    if(WIN32)
+        # SDL under windows is more comfortable in a console application instead of a windowed one
+        set_target_properties(curseofwar-sdl PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE")
+    endif(WIN32)    
+    TARGET_LINK_LIBRARIES(curseofwar-sdl ${COMMON_LIBS} ${SDL_LIBRARY} )
 endif(SDL_FRONTEND)
 
