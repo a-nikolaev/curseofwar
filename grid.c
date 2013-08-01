@@ -400,13 +400,13 @@ int conflict (struct grid *g, struct loc loc_arr[], int available_loc_num,
   }
   
   /* suffled computer players */
-  int *sh_players_comp = malloc(sizeof(int)*players_num);
+  int *sh_players_comp = (int*)malloc(sizeof(int)*players_num);
   for(i=0; i<players_num; ++i)
     sh_players_comp[i] = players[i];
   shuffle(sh_players_comp, players_num);
 
   /* a shuffled copy of the players array */
-  int *sh_players = malloc(sizeof(int)*num);
+  int *sh_players = (int*)malloc(sizeof(int)*num);
   for(i=0; i<ui_players_num; ++i)
     sh_players[i] = ui_players[i];
   int dplayer = rand() % players_num;
