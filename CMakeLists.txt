@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 PROJECT( curseofwar )
 
 find_package(SDL)
+find_package(curses)
 
 option(CW_NCURSE_FRONTEND "Compile the NCurses frontend" ON)
 
