@@ -34,15 +34,8 @@ CFLAGS += -Wall -O2
 LDLIBS += -lm
 
 # Define a C preprocessor variable DATADIR 
-# if DATADIR is provided directly, 
-# or otherwise if DESTDIR is provided (thus indirectly defining DATADIR)
 ifdef DATADIR
  CPPFLAGS += -DDATADIR=\"$(DATADIR)\"
-else
- ifdef DESTDIR
-  DATADIR = $(DESTDIR)$(PREFIX)/share/$(GAME_TITLE)
-  CPPFLAGS += -DDATADIR=\"$(DATADIR)\"
- endif
 endif
 
 # Common sources and header
@@ -56,8 +49,12 @@ ifdef SDL
  LDLIBS += $(shell sdl-config --libs)
  EXEC = $(EXEC_SDL)
  # Install and uninstall resources
- INSTALL_OPTIONAL = install-data-dir install-images install-sdl-manpage
- UNINSTALL_OPTIONAL = uninstall-images uninstall-data-dir uninstall-sdl-manpage
+ INSTALL_OPTIONAL = install-sdl-manpage
+ UNINSTALL_OPTIONAL = uninstall-sdl-manpage
+ ifdef INSTALL_DATA
+  INSTALL_OPTIONAL += install-images
+  UNINSTALL_OPTIONAL += uninstall-images
+ endif
 else
  OBJS += $(OBJS_NCURSES)
  HDRS += $(HDRS_NCURSES)
@@ -84,8 +81,6 @@ $(EXEC): $(OBJS) $(HDRS)
 
 
 # Install
-install-data-dir:
-	$(INSTALL) -m 755 -d $(DATADIR)
 install-images:
 	$(INSTALL) -m 755 -d $(DATADIR)/$(IMAGESDIR)
 	for file in $(IMAGESDIR)/*; do \
@@ -106,8 +101,6 @@ install: all $(INSTALL_OPTIONAL)
 	-chmod 644 $(DOCDIR)/changelog.gz
 
 # Uninstall
-uninstall-data-dir:
-	-rmdir $(DATADIR)
 uninstall-images:
 	-rm $(DATADIR)/$(IMAGESDIR)/*
 	-rmdir $(DATADIR)/$(IMAGESDIR)
