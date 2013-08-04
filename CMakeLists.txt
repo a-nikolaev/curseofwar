@@ -18,6 +18,7 @@ SET (SOURCE_COMMON     grid.c
                        state.c 
                        king.c 
                        output-common.c 
+                       path.c 
                        main-common.c)
 
 SET (SOURCE_SDL     output-sdl.c
