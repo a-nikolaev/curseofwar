@@ -17,7 +17,7 @@ DOCDIR = $(DESTDIR)$(PREFIX)/share/doc/$(GAME_TITLE)
 #DATADIR ?= $(DESTDIR)$(PREFIX)/share/$(GAME_TITLE)
 IMAGESDIR = images
 
-SRCS_INDEP = grid.c state.c king.c network.c client.c server.c output-common.c main-common.c
+SRCS_INDEP = grid.c state.c king.c network.c client.c server.c output-common.c path.c main-common.c
 SRCS_NCURSES = output.c main.c 
 SRCS_SDL = output-sdl.c main-sdl.c
 
@@ -32,11 +32,6 @@ OBJS_SDL = $(SRCS_SDL:.c=.o)
 EXECS = $(EXEC_NCURSES) $(EXEC_SDL)
 CFLAGS += -Wall -O2
 LDLIBS += -lm
-
-# Define a C preprocessor variable DATADIR 
-ifdef DATADIR
- CPPFLAGS += -DDATADIR=\"$(DATADIR)\"
-endif
 
 # Common sources and header
 OBJS = $(OBJS_INDEP) 
@@ -82,9 +77,9 @@ $(EXEC): $(OBJS) $(HDRS)
 
 # Install
 install-images:
-	$(INSTALL) -m 755 -d $(DATADIR)/$(IMAGESDIR)
+	$(INSTALL) -m 755 -d $(INSTALL_DATA)/$(IMAGESDIR)
 	for file in $(IMAGESDIR)/*; do \
-		$(INSTALL) -m 0644 $$file $(DATADIR)/$(IMAGESDIR); \
+		$(INSTALL) -m 0644 $$file $(INSTALL_DATA)/$(IMAGESDIR); \
 	done
 install-sdl-manpage:
 	$(INSTALL) -m 755 -d $(MANDIR)
@@ -102,8 +97,8 @@ install: all $(INSTALL_OPTIONAL)
 
 # Uninstall
 uninstall-images:
-	-rm $(DATADIR)/$(IMAGESDIR)/*
-	-rmdir $(DATADIR)/$(IMAGESDIR)
+	-rm $(INSTALL_DATA)/$(IMAGESDIR)/*
+	-rmdir $(INSTALL_DATA)/$(IMAGESDIR)
 uninstall-sdl-manpage:
 	-rm -f $(MANDIR)/$(EXEC_SDL).6.gz
 

@@ -17,21 +17,17 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  
 ******************************************************************************/
-#ifndef _MAIN_COMMON_H
-#define _MAIN_COMMON_H
 
-#include "state.h"
+#ifndef _PATH_H
+#define _PATH_H
 
-#define DEF_SERVER_ADDR "127.0.0.1"
-#define DEF_SERVER_PORT "19140"
-#define DEF_CLIENT_PORT "19150"
+/* Creates NULL terminater list of paths to search for game data files, allocates memory! */
+char **get_search_paths();
 
-int game_slowdown (int speed);
+/* Free alocated memory */
+void destroy_search_paths(char** path);
 
-void print_help();
-
-int get_options(int argc, char *argv[], struct basic_options *op, struct multi_options *mop);
-
-int singleplayer_process_input (struct state *st, struct ui *ui, char c);
+/* Returns a string with found path, allocates memory */
+char *find_file(char** path, char* suffix);
 
 #endif

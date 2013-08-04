@@ -30,8 +30,7 @@
 #include "state.h"
 #include "output-sdl.h"
 #include "main-common.h"
-
-#define IMAGES_SUFFIX "/images/"
+#include "path.h"
 
 /* delay in milliseconds */
 #define TIME_DELAY 10
@@ -136,17 +135,21 @@ int main(int argc, char *argv[]) {
   SDL_EnableUNICODE(1);
   SDL_EnableKeyRepeat(300, 30);
 
-  /* Load Images */
-  char *filename = (char*) malloc(sizeof(char) * (strlen(DATADIR) + strlen(IMAGES_SUFFIX) + 256));
+  /* Load Data */
+  char **path;
+  path = get_search_paths();
+  
+  /* Images */
+  char *filename;
   
   SDL_Surface *tileset;
-  sprintf(filename, "%s%stileset.bmp", DATADIR, IMAGES_SUFFIX);
-  if ( load_image(filename, &tileset) != 0) return 1;
+  filename = find_file (path, "images/tileset.bmp");
+  if ( load_image(filename, &tileset) != 0 ) return 1;
+  free(filename); 
   
   SDL_Surface *typeface;
-  sprintf(filename, "%s%stype.bmp", DATADIR, IMAGES_SUFFIX);
-  if ( load_image(filename, &typeface) != 0) return 1;
-  
+  filename = find_file (path, "images/type.bmp");
+  if ( load_image(filename, &typeface) != 0 ) return 1;
   free(filename);
 
   /* Run the game */
@@ -158,7 +161,8 @@ int main(int argc, char *argv[]) {
   
   if (!mop.multiplayer_flag || mop.server_flag)
     printf ("Random seed was %i\n", st.map_seed);
-  
+
+  destroy_search_paths(path);
   free(mop.val_client_port);
   free(mop.val_server_addr);
   free(mop.val_server_port);

@@ -25,14 +25,55 @@ Summary
 
 Build, Install, Uninstall
 =========================
-Build:
-  $ make
 
-Install:
-  # make install
+  To build for executing in the current directory:
+    $ make
 
-Uninstall:
-  # make uninstall
+  SDL version:
+    $ make SDL=yes
+
+  To install, specify DESTDIR variable:
+    $ make 
+    # make DESTDIR=/path install
+    # make DESTDIR=/path unisntall
+
+  Add 'SDL=yes' after 'make' in all three lines, to build, install, and uninstall
+  the SDL vesion. 
+
+  The executable is copied to $DESTDIR/usr/bin, it also installs the manpage(s) and 
+  the changelog.
+
+  Install game data:
+  ------------------
+    Game data includes:
+      folder /images/
+
+    Thus, the ncurses version does not require any data at the moment.
+
+    Game executables are searching for the game data in one of the following
+    directories, make sure to copy the data in one of them:
+      1) ./                             (Your current directory)
+      2) $XDG_DATA_HOME/curseofwar      (Defaults to ~/.local/share/curseofwar)
+      3) ~/.curseofwar                  (If possible, use ~/.local/share/curseofwar)
+      4) /usr/local/share/curseofwar 
+      5) /usr/share/curseofwar
+
+    To copy the data, you can simply 'cp' /images/ directory in one of the supported 
+    folders, or do it with make install and variable INSTALL_DATA:
+
+      Example:
+      To build the SDL version of the game and install it in /usr/bin:
+      $ make SDL=yes 
+      # make SDL=yes DESTDIR=/ INSTALL_DATA=/usr/share/curseofwar install
+      
+      Then to uninsitall:
+      # make SDL=yes DESTDIR=/ INSTALL_DATA=/usr/share/curseofwar unisntall
+      # rm -r /usr/share/curseofwar
+
+      (DESTDIR=/) can be omitted, of course.
+
+  You can install both ncurses and SDL executables simultaneously. They are 
+  using the same data directory.
 
 Command line arguments
 ======================
