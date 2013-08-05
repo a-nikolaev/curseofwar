@@ -26,9 +26,18 @@
 #define DEF_SERVER_PORT "19140"
 #define DEF_CLIENT_PORT "19150"
 
-int game_slowdown (int speed);
-
+/* print help message */
 void print_help();
+
+/*
+  returns:
+    player won  1
+    lost       -1
+    otherwise   0
+ */
+int win_or_lose(struct state *st);
+
+int game_slowdown (int speed);
 
 int get_options(int argc, char *argv[], struct basic_options *op, struct multi_options *mop);
 

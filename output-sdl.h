@@ -54,7 +54,7 @@ void output_string(SDL_Surface *typeface, SDL_Surface *screen, char *str, int ds
 void output_string_alt(SDL_Surface *typeface, int player, SDL_Surface *screen, char *str, int dsti, int dstj);
 
 /* Render everything */
-void output_sdl (SDL_Surface *tileset, SDL_Surface *typeface, SDL_Surface *screen, struct state *s, struct ui *ui,
+void output_sdl (SDL_Surface *tileset, SDL_Surface *typeface, SDL_Surface *uisurf, SDL_Surface *screen, struct state *s, struct ui *ui,
     int variant[MAX_WIDTH][MAX_HEIGHT], int pop_variant[MAX_WIDTH][MAX_HEIGHT], int ktime);
 
 #endif

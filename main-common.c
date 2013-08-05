@@ -79,6 +79,36 @@ void print_help() {
   );
 }
 
+int win_or_lose(struct state *st) {
+  int i, j, p;
+  int pop[MAX_PLAYER];
+  for (p=0; p<MAX_PLAYER; ++p) pop[p] = 0;
+
+  for(i=0; i<st->grid.width; ++i){
+    for(j=0; j<st->grid.height; ++j){
+      if(is_inhabitable(st->grid.tiles[i][j].cl)) {
+        for(p=0; p<MAX_PLAYER; ++p){
+          pop[p] += st->grid.tiles[i][j].units[p][citizen];
+        }
+      }
+    }
+  }
+
+  int win = 1;
+  int lose = 0;
+  int best = 0;
+  for(p=0; p<MAX_PLAYER; ++p){
+    if(pop[best] < pop[p]) best = p;
+    if(p!=st->controlled && pop[p]>0) win = 0;
+  }
+  if(pop[st->controlled] == 0) lose = 1;
+
+  if (win) return 1;
+  else if (lose) return -1;
+  else return 0;
+}
+
+
 int game_slowdown (int speed) {
   int slowdown = 20;
   switch (speed) {

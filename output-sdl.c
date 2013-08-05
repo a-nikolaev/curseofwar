@@ -74,6 +74,24 @@ int load_image(char *filename, SDL_Surface **image) {
   return 0;
 }
 
+void blit_arb(SDL_Surface *src_surf, SDL_Surface *dst_surf, 
+    int si, int sj, int sw, int sh, int di, int dj, int dw, int dh) {
+
+  static SDL_Rect src, dest;
+   
+  src.x = si;
+  src.y = sj;
+  src.w = sw;
+  src.h = sh;
+   
+  dest.x = di;
+  dest.y = dj;
+  dest.w = dw;
+  dest.h = dh;
+   
+  SDL_BlitSurface(src_surf, &src, dst_surf, &dest);
+}
+
 void blit_subpic(SDL_Surface *src_surf, SDL_Surface *dst_surf, int srci, int srcj, int dsti, int dstj) {
   static SDL_Rect src, dest;
    
@@ -199,7 +217,7 @@ int is_a_cliff (int i, int j, struct grid *g, int buf[MAX_CLIFF]) {
 #define POSY(j) ((j)+1)
 #define POSX(ui,i) ((i) - (ui->xskip))
 
-void output_sdl (SDL_Surface *tileset, SDL_Surface *typeface, SDL_Surface *screen, 
+void output_sdl (SDL_Surface *tileset, SDL_Surface *typeface, SDL_Surface *uisurf, SDL_Surface *screen, 
     struct state *s, struct ui *ui,
     int variant[MAX_WIDTH][MAX_HEIGHT], int pop_variant[MAX_WIDTH][MAX_HEIGHT], int ktime) {
 
@@ -360,28 +378,9 @@ void output_sdl (SDL_Surface *tileset, SDL_Surface *typeface, SDL_Surface *scree
       TILE_WIDTH + 54*TYPE_WIDTH, screen_y + 4*TYPE_HEIGHT);
 
   /* line */
-  output_string_alt(typeface, 9, screen, 
-      "!\"\"##$$%%&&''(())**++,,--..//00112233445566778899::;;<<==>>??@", 
-      TILE_WIDTH + 6*TYPE_WIDTH, screen_y + 2*TYPE_HEIGHT);
-
-  /*
-  output_string(typeface, screen, "[Space] add/remove a flag", 
-      TILE_WIDTH + 0*TYPE_WIDTH, screen_y + 4*TYPE_HEIGHT);
-  
-  output_string(typeface, screen, "[R or V] build", 
-      TILE_WIDTH + 0*TYPE_WIDTH, screen_y + 5*TYPE_HEIGHT);
-
-  output_string(typeface, screen, "[X] remove all flags", 
-      TILE_WIDTH + 29*TYPE_WIDTH, screen_y + 4*TYPE_HEIGHT);
-  output_string(typeface, screen, "[C] remove 50% of flags", 
-      TILE_WIDTH + 29*TYPE_WIDTH, screen_y + 5*TYPE_HEIGHT);
-
-  output_string(typeface, screen, "[F] speed up", 
-      TILE_WIDTH + 58*TYPE_WIDTH, screen_y + 4*TYPE_HEIGHT);
-  output_string(typeface, screen, "[S] slow down", 
-      TILE_WIDTH + 58*TYPE_WIDTH, screen_y + 5*TYPE_HEIGHT);
-  output_string(typeface, screen, "[P] pause", 
-      TILE_WIDTH + 58*TYPE_WIDTH, screen_y + 6*TYPE_HEIGHT);
-  */ 
+  int line_width=555;
+  struct SDL_Rect src_line_rect = {0, 0, line_width, 1};
+  struct SDL_Rect dst_line_rect = {.x=TILE_WIDTH + 75*TYPE_WIDTH/2 - line_width/2, .y=screen_y + (TYPE_HEIGHT*5/2), .w=line_width, .h=1};
+  SDL_BlitSurface(uisurf, &src_line_rect, screen, &dst_line_rect);
 
 }

@@ -35,7 +35,8 @@
 /* delay in milliseconds */
 #define TIME_DELAY 10
 
-void run(struct state *st, struct ui *ui, SDL_Surface *screen, SDL_Surface *tileset, SDL_Surface *typeface){
+void run(struct state *st, struct ui *ui, 
+    SDL_Surface *screen, SDL_Surface *tileset, SDL_Surface *typeface, SDL_Surface *uisurf){
   /* tile variation */
   int tile_variant[MAX_WIDTH][MAX_HEIGHT];
   int pop_variant[MAX_WIDTH][MAX_HEIGHT];
@@ -90,7 +91,7 @@ void run(struct state *st, struct ui *ui, SDL_Surface *screen, SDL_Surface *tile
       }
 
       if (k % 5 == 0) {
-        output_sdl(tileset, typeface, screen, st, ui, tile_variant, pop_variant, k);
+        output_sdl(tileset, typeface, uisurf, screen, st, ui, tile_variant, pop_variant, k);
         SDL_Flip(screen);
       }
     }
@@ -153,13 +154,19 @@ int main(int argc, char *argv[]) {
   filename = find_file (path, "images/type.bmp");
   if ( load_image(filename, &typeface) != 0 ) return 1;
   free(filename);
+  
+  SDL_Surface *uisurf;
+  filename = find_file (path, "images/ui.bmp");
+  if ( load_image(filename, &uisurf) != 0 ) return 1;
+  free(filename);
 
   /* Run the game */
-  run(&st, &ui, screen, tileset, typeface);
+  run(&st, &ui, screen, tileset, typeface, uisurf);
 
   /* Finalize */
   SDL_FreeSurface(tileset);
   SDL_FreeSurface(typeface);
+  SDL_FreeSurface(uisurf);
   
   if (!mop.multiplayer_flag || mop.server_flag)
     printf ("Random seed was %i\n", st.map_seed);

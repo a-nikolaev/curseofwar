@@ -50,37 +50,21 @@ int  update_from_input( struct state *st, struct ui *ui );
 int  update_from_input_client( struct state *st, struct ui *ui, int sfd, struct addrinfo *srv_addr);
 int  update_from_input_server( struct state *st );
 
-void win_or_lose(struct state *st, int k) {
-  int i, j, p;
-  int pop[MAX_PLAYER];
-  for (p=0; p<MAX_PLAYER; ++p) pop[p] = 0;
-
-  for(i=0; i<st->grid.width; ++i){
-    for(j=0; j<st->grid.height; ++j){
-      if(is_inhabitable(st->grid.tiles[i][j].cl)) {
-        for(p=0; p<MAX_PLAYER; ++p){
-          pop[p] += st->grid.tiles[i][j].units[p][citizen];
-        }
-      }
+/* print the victory message */
+void win_or_lose_message(struct state *st, int k) {
+  if (k%100 == 0) {
+    switch(win_or_lose(st)) {
+      case 1:
+        attrset(A_BOLD | COLOR_PAIR(4));
+        mvaddstr(2 + st->grid.height, 31, "You are victorious!");
+        break;
+      case -1:
+        attrset(A_BOLD | COLOR_PAIR(2));
+        mvaddstr(2 + st->grid.height, 31, "You are defeated!");
+        break;
+      default:
+        ;
     }
-  }
-
-  int win = 1;
-  int lose = 0;
-  int best = 0;
-  for(p=0; p<MAX_PLAYER; ++p){
-    if(pop[best] < pop[p]) best = p;
-    if(p!=st->controlled && pop[p]>0) win = 0;
-  }
-  if(pop[st->controlled] == 0) lose = 1;
-
-  if (win) {
-    attrset(A_BOLD | COLOR_PAIR(4));
-    mvaddstr(2 + st->grid.height, 31, "You are victorious!");
-  }
-  else if (lose) {
-    attrset(A_BOLD | COLOR_PAIR(2));
-    mvaddstr(2 + st->grid.height, 31, "You are defeated!");
   }
 }
 
@@ -108,8 +92,7 @@ void run (struct state *st, struct ui *ui) {
           output_timeline(st, ui);
       }
       time_to_redraw = 0;
-
-      if (k%100 == 0) win_or_lose(st, k);
+      win_or_lose_message(st, k);
     }
     finished = update_from_input(st, ui);
     pause(); // sleep until woken up by SIGALRM
@@ -152,6 +135,13 @@ void run_client (struct state *st, struct ui *ui, char *s_server_addr, char *s_s
       }
       if (initialized) {
         output_grid(st, ui, k);
+        /*
+        if (st->show_timeline) {
+          if (st->time%10 == 0)
+            output_timeline(st, ui);
+        }
+        */
+        win_or_lose_message(st, k);
       }
     }
     finished = update_from_input_client(st, ui, sfd, &srv_addr);
