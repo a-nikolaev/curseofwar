@@ -48,8 +48,10 @@ void blit_subpic_noise(SDL_Surface *src_surf, SDL_Surface *dst_surf, int srci, i
 void blit_subpic_2h(SDL_Surface *src_surf, SDL_Surface *dst_surf, int srci, int srcj, int dsti, int dstj);
 
 /* Text output functions */
-void output_char(SDL_Surface *typeface, SDL_Surface *screen, char c, int dsti, int dstj);
+void output_char(SDL_Surface *typeface, SDL_Surface *screen, int c, int dsti, int dstj);
 void output_string(SDL_Surface *typeface, SDL_Surface *screen, char *str, int dsti, int dstj);
+
+void output_string_alt(SDL_Surface *typeface, int player, SDL_Surface *screen, char *str, int dsti, int dstj);
 
 /* Render everything */
 void output_sdl (SDL_Surface *tileset, SDL_Surface *typeface, SDL_Surface *screen, struct state *s, struct ui *ui,

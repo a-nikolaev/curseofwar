@@ -130,7 +130,7 @@ void blit_subpic_2h(SDL_Surface *src_surf, SDL_Surface *dst_surf, int srci, int 
 
 
 
-void output_char(SDL_Surface *typeface, SDL_Surface *screen, char c, int dstx, int dsty){
+void output_char(SDL_Surface *typeface, SDL_Surface *screen, int c, int dstx, int dsty){
   static SDL_Rect src, dest;
   
   int z = c - TYPE_FIRST;
@@ -154,6 +154,14 @@ void output_string(SDL_Surface *typeface, SDL_Surface *screen, char *str, int ds
   int i=0;
   while(str[i]!='\0') {
     output_char(typeface, screen, str[i], dstx+i*TYPE_WIDTH, dsty);
+    i++;
+  }
+}
+
+void output_string_alt(SDL_Surface *typeface, int player, SDL_Surface *screen, char *str, int dstx, int dsty){
+  int i=0;
+  while(str[i]!='\0') {
+    output_char(typeface, screen, str[i] + TYPE_LINE_LENGTH*(3+player), dstx+i*TYPE_WIDTH, dsty);
     i++;
   }
 }
@@ -197,7 +205,7 @@ void output_sdl (SDL_Surface *tileset, SDL_Surface *typeface, SDL_Surface *scree
 
   /* Clear screen */
   SDL_Rect rect = {0, 0, screen->w, screen->h};
-  SDL_FillRect(screen, &rect, (SDL_MapRGB(screen->format, 0, 0, 0)));
+  SDL_FillRect(screen, &rect, (SDL_MapRGB(screen->format, 20, 20, 20)));
 
   /* Draw */
   int i=0,j=0,k=0;
@@ -302,7 +310,78 @@ void output_sdl (SDL_Surface *tileset, SDL_Surface *typeface, SDL_Surface *scree
   int screen_y = (POSY(s->grid.height) + 1) * TILE_HEIGHT;
 
   char buf[128];
-  sprintf(buf, "Gold: %li     ", s->country[s->controlled].gold);
-  output_string(typeface, screen, buf, TILE_WIDTH, screen_y);
+  output_string(typeface, screen, "Gold: ", TILE_WIDTH, screen_y);
+  sprintf(buf, "%li     ", s->country[s->controlled].gold);
+  output_string_alt(typeface, s->controlled, screen, buf, TILE_WIDTH + 6*TYPE_WIDTH, screen_y);
+  
+  sprintf(buf, "Prices: 150 300 600");
+  output_string(typeface, screen, buf, TILE_WIDTH, screen_y + 1*TYPE_HEIGHT);
+  
+  int y,m,d;
+  time_to_ymd(s->time, &y, &m, &d);
+
+  output_string(typeface, screen, "Date: ", TILE_WIDTH + 54*TYPE_WIDTH, screen_y + 0*TYPE_HEIGHT);
+  sprintf(buf, "%i-%02i-%02i", y, m, d);
+  output_string_alt(typeface, s->controlled, screen, buf, TILE_WIDTH + 60*TYPE_WIDTH, screen_y + 0*TYPE_HEIGHT);
+  
+  output_string(typeface, screen, "Speed:", TILE_WIDTH + 54*TYPE_WIDTH, screen_y + 1*TYPE_HEIGHT);
+  switch(s->speed){
+    case sp_fastest: sprintf(buf,"Fastest"); break;
+    case sp_faster:  sprintf(buf,"Faster "); break;
+    case sp_fast:    sprintf(buf,"Fast   "); break;
+    case sp_normal:  sprintf(buf,"Normal "); break;
+    case sp_slow:    sprintf(buf,"Slow   "); break;
+    case sp_slower:  sprintf(buf,"Slower "); break;
+    case sp_slowest: sprintf(buf,"Slowest"); break;
+    case sp_pause:   sprintf(buf,"Pause  "); break;
+  }
+  output_string(typeface, screen, buf, TILE_WIDTH + 61*TYPE_WIDTH, screen_y + 1*TYPE_HEIGHT);
+
+
+  sprintf(buf, "Population:");
+  output_string(typeface, screen, buf, TILE_WIDTH + 23*TYPE_WIDTH, screen_y + 0*TYPE_HEIGHT);
+  int p;
+  for (p=1; p<MAX_PLAYER; ++p) {
+    sprintf(buf, "%3i", s->grid.tiles[ui->cursor.i][ui->cursor.j].units[p][citizen]);
+    output_string_alt(typeface, p, screen, buf, 
+      TILE_WIDTH + (23 + 4*(p-1))*TYPE_WIDTH, screen_y + 1*TYPE_HEIGHT);
+  }
+
+  output_string(typeface, screen, "[Space] flag", 
+      TILE_WIDTH + 0*TYPE_WIDTH, screen_y + 3*TYPE_HEIGHT);
+  output_string(typeface, screen, "[R] or [V] build", 
+      TILE_WIDTH + 27*TYPE_WIDTH, screen_y + 3*TYPE_HEIGHT);
+  output_string(typeface, screen, "[X],[C] mass remove", 
+      TILE_WIDTH + 0*TYPE_WIDTH, screen_y + 4*TYPE_HEIGHT);
+  
+  output_string(typeface, screen, "[S] slower [F] faster", 
+      TILE_WIDTH + 54*TYPE_WIDTH, screen_y + 3*TYPE_HEIGHT);
+  output_string(typeface, screen, "[P] pause", 
+      TILE_WIDTH + 54*TYPE_WIDTH, screen_y + 4*TYPE_HEIGHT);
+
+  /* line */
+  output_string_alt(typeface, 9, screen, 
+      "!\"\"##$$%%&&''(())**++,,--..//00112233445566778899::;;<<==>>??@", 
+      TILE_WIDTH + 6*TYPE_WIDTH, screen_y + 2*TYPE_HEIGHT);
+
+  /*
+  output_string(typeface, screen, "[Space] add/remove a flag", 
+      TILE_WIDTH + 0*TYPE_WIDTH, screen_y + 4*TYPE_HEIGHT);
+  
+  output_string(typeface, screen, "[R or V] build", 
+      TILE_WIDTH + 0*TYPE_WIDTH, screen_y + 5*TYPE_HEIGHT);
+
+  output_string(typeface, screen, "[X] remove all flags", 
+      TILE_WIDTH + 29*TYPE_WIDTH, screen_y + 4*TYPE_HEIGHT);
+  output_string(typeface, screen, "[C] remove 50% of flags", 
+      TILE_WIDTH + 29*TYPE_WIDTH, screen_y + 5*TYPE_HEIGHT);
+
+  output_string(typeface, screen, "[F] speed up", 
+      TILE_WIDTH + 58*TYPE_WIDTH, screen_y + 4*TYPE_HEIGHT);
+  output_string(typeface, screen, "[S] slow down", 
+      TILE_WIDTH + 58*TYPE_WIDTH, screen_y + 5*TYPE_HEIGHT);
+  output_string(typeface, screen, "[P] pause", 
+      TILE_WIDTH + 58*TYPE_WIDTH, screen_y + 6*TYPE_HEIGHT);
+  */ 
 
 }

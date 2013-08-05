@@ -117,7 +117,9 @@ int main(int argc, char *argv[]) {
   ui_init(&st, &ui);
 
   int screen_width = (ui.xlength + 2) * TILE_WIDTH;
-  int screen_height = (st.grid.height + 3) * TILE_HEIGHT;
+  int screen_height = (st.grid.height + 3) * TILE_HEIGHT + TYPE_HEIGHT*5;
+  screen_width = MAX (screen_width, TILE_WIDTH + 75*TYPE_WIDTH + TILE_WIDTH);
+
   /* Init SDL */
   if ( SDL_Init(SDL_INIT_AUDIO|SDL_INIT_VIDEO) < 0 ) {
     fprintf(stderr, "Unable to init SDL: %s\n", SDL_GetError());
