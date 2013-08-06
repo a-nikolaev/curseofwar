@@ -13,10 +13,10 @@ BINDIR = $(DESTDIR)$(PREFIX)/bin
 MANDIR = $(DESTDIR)$(MANPREFIX)/man6
 DOCDIR = $(DESTDIR)$(PREFIX)/share/doc/$(GAME_TITLE)
 
-# Game resources directory
-#DATADIR ?= $(DESTDIR)$(PREFIX)/share/$(GAME_TITLE)
+# Game resources directories
 IMAGESDIR = images
 
+# Sources
 SRCS_INDEP = grid.c state.c king.c network.c client.c server.c output-common.c path.c main-common.c
 SRCS_NCURSES = output.c main.c 
 SRCS_SDL = output-sdl.c main-sdl.c
