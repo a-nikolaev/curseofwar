@@ -70,9 +70,25 @@ To build and install:
     
 Then to uninsitall, if necessary:
 
-    # make DESTDIR=/ INSTALL_DATA=/usr/share/curseofwar unisntall
-    # make SDL=yes DESTDIR=/ INSTALL_DATA=/usr/share/curseofwar unisntall
+    # make DESTDIR=/ INSTALL_DATA=/usr/share/curseofwar uninstall
+    # make SDL=yes DESTDIR=/ INSTALL_DATA=/usr/share/curseofwar uninstall
     # rm -r /usr/share/curseofwar
 
 `DESTDIR=/` can be omitted here, but it's kept for completeness.
 
+Build from sources on Windows
+=============================
+
+You will need the SDL development libraries installed on your computer.
+
+There are several possibilities. You can use **cmake-gui**, for example.
+
+- Fill the `source code` field with the path to the root directory of curseofwar
+- Fill the `binairies` field with the path of your build directory
+- Press `[Configure]`
+- If your SDL install is at a custom location, you will need to fill the appropriate fields and hit `[Configure]` again.
+- Under windows, you will need to uncheck `CW_NCURSE_FRONTEND` and `CW_SDL_MULTIPLAYER`
+- Press `[Generate]`
+- A project file was created in the build directory. Use it to build the projects.
+
+Note that executable will fail if they are not run from the directory containing `images/`.

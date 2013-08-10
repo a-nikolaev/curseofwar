@@ -35,6 +35,10 @@ div.page {
   padding-top:2em;
 }
 
+.page img {
+  border: 0.3em solid #060608;
+}
+
 div#nav {
   margin-top:-1em;
   margin-bottom: 2em;

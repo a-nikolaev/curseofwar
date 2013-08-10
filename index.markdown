@@ -3,12 +3,28 @@ layout: default
 title: Home
 ---
 
+[![screenshot3](http://i.imgur.com/QhsgqRbs.png)](http://i.imgur.com/QhsgqRb.png)
+[![screenshot2](http://i.imgur.com/JoVcPvTs.png)](http://i.imgur.com/JoVcPvT.png) 
+[![gif-animation](http://i.imgur.com/K2AV6zSs.gif)](http://i.imgur.com/K2AV6zS.gif) 
+[![screenshot-sdl1](http://i.imgur.com/FlfVmxqs.png)](http://i.imgur.com/FlfVmxq.png) 
+[![screenshot-sdl2](http://i.imgur.com/fJ8VByNs.png)](http://i.imgur.com/fJ8VByN.png) 
+
 **Curse of War** is a fast-paced action strategy game for Linux implemented using 
 ncurses user interface.
 
 Unlike most RTS, you are not controlling units, but focus on high-level 
 strategic planning: Building infrastructure, securing resources, 
 and moving your armies.
+
+**Influences:** Globulation2, Liquidwar, Settlers, StarCraft, various tty games, roguelikes.
+
+<!--
+## Videos
+
+[![](http://i.imgur.com/mN7lBYi.png)](http://youtu.be/FZH4qbIxpx4) 
+[![](http://i.imgur.com/4RSZixh.png)](http://youtu.be/EzGuR66gemw) 
+[![](http://i.imgur.com/yxQPCUL.png)](http://youtu.be/Egh3Jw-XafU)
+-->
 
 # Install
 
@@ -55,6 +71,9 @@ To start a client and connect to the server:
     $ curseofwar -C <server's IP> 
                                        
 To play with another person, you start a server, and both players start their clients, connecting to this server (i.e. if you run the server, you should connect to your own IP, `127.0.0.1`). See the last section of the [README](https://github.com/a-nikolaev/curseofwar#readme) file for details.
+
+## Our IRC
+Join #curseofwar on irc.freenode.net 
 
 <!--
 <div id="home">
