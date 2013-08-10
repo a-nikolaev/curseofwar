@@ -10,6 +10,6 @@ title: How to get
 * Ubuntu: [PPA team](https://launchpad.net/~curseofwar). 
 
 # Build from sources
-  It's not hard to build the game from sources. Read detailed [instructions]({{ site.url }}/build/)
+  It's not hard to build the game from sources. Read detailed [instructions]({{ site.baseurl }}/build/)
 
 # On Windows
