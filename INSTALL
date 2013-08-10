@@ -60,8 +60,8 @@ Example, how to build and install everything
     # make SDL=yes DESTDIR=/ INSTALL_DATA=/usr/share/curseofwar install
     
   Then to uninsitall, if necessary:
-    # make DESTDIR=/ INSTALL_DATA=/usr/share/curseofwar unisntall
-    # make SDL=yes DESTDIR=/ INSTALL_DATA=/usr/share/curseofwar unisntall
+    # make DESTDIR=/ INSTALL_DATA=/usr/share/curseofwar uninstall
+    # make SDL=yes DESTDIR=/ INSTALL_DATA=/usr/share/curseofwar uninstall
     # rm -r /usr/share/curseofwar
 
   "DESTDIR=/" can be omitted here, but it's kept for completeness.
