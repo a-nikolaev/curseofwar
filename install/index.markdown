@@ -1,6 +1,6 @@
 ---
 layout: page
-title: How to get
+title: How to get the game
 ---
 
 # Packages for popular Linux distributions
