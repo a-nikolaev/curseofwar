@@ -1,0 +1,142 @@
+html, body {
+  color:#aabbaa;
+  font-family: "Lato", sans-serif;
+  /*
+  font-size: 18px;
+  */
+
+  line-height:1.42em;
+
+  background-color:#0B0B0D;
+  /* background-color:#ffffff; */
+  /* #16161D */
+
+  /*
+  text-shadow: 0px 0px 2px #ffffff, 0px 0px 3px #ffffff;
+  */
+  height: 100%;
+}
+
+div.page {
+  max-width: 45em;
+  //  background: url("/home/alex/design/bg/1.png") no-repeat;
+  background-position: top right;
+  background-color: #08080A;
+
+  margin-left:auto;
+  margin-right:auto;
+
+  min-height: 100%;
+  
+  border: 0.1em solid #0D0D0F;
+  border-top: none;
+
+  padding:3em;
+  padding-top:2em;
+}
+
+div#nav {
+  margin-top:-1em;
+  margin-bottom: 2em;
+  margin-left:-3.06em;
+  margin-right:-3.08em;
+  padding-left:2em;
+  padding-top:0.3em;
+  padding-bottom:0.2em;
+
+  /* 
+  border-top: 0.1em solid #68c035;
+  border-bottom: 0.1em solid #68c035;
+  */
+
+  /*
+  border-left: 0.1em solid #68c035;
+  border-right: 0.1em solid #68c035;
+  */
+  background:#98e065; 
+  
+  font-weight:bold; 
+  color:#ffffff;
+}
+
+p {margin-top:1.5em; margin-bottom:1.5em;}
+
+h1, h2, h3, h4, h5 {
+  /*color:#445566;*/
+  color:#868076;
+//  font-family:Arial, sans-serif;
+//  font-family: Times, 'Times New Roman', serif;
+  font-style:italic;
+  //font-family: Times, 'Times New Roman', serif; 
+  
+  /* 
+  text-shadow: 1px 1px 1px #446699, 0px 0px 1px #446699;
+  */
+}
+
+h1 {
+  //font-size:3em; 
+  //font-family: Times, 'Times New Roman', serif; 
+  padding-top:0.2em;
+}
+
+
+a {
+}
+
+/*
+a:link {
+  color: #3377bb;
+}
+a:visited {
+  color: #9922bb;
+}
+a:hover {
+  color: #1155ff;
+}
+*/
+
+a{
+  /* border: 0.05em dotted; */
+  padding:0.1em 0.2em 0.1em 0.2em;
+  /* border-color: white; */
+}
+
+a:link {
+  color: #559e00;
+}
+a:visited {
+  color: #608550;
+}
+a:hover {
+  /* color: #86ce00; */
+  /*
+  border: 0.05em solid;
+  border-color: #507000;
+  border-radius: 0.5em;
+  */
+}
+
+code {  
+  font-size:0.9em;
+  color:#A0AA55;
+  background-color:#0B0B0D;
+}
+
+pre {
+  background-color:#0B0B0D;
+  line-height:1.3em;
+  margin-left:-1.1em; margin-right:-1em; 
+  padding:1.0em;  
+  padding-left:1.0em;  
+  padding-right:1.0em; 
+  /*
+  border-top:0.1em solid #f4f0e4; 
+  border-bottom:0.1em solid #f4f0e4; 
+  border-left:0.2em solid #b48a64; 
+  border:0em #ffffff;
+  */
+
+  border:0em #0B0B0D;
+  border-left:0.1em solid #0D0D0F /* #eae8d4 */; 
+}
