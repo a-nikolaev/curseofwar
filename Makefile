@@ -97,13 +97,13 @@ install: all $(INSTALL_OPTIONAL)
 
 # Uninstall
 uninstall-images:
-	-rm $(INSTALL_DATA)/$(IMAGESDIR)/*
+	-rm -f $(INSTALL_DATA)/$(IMAGESDIR)/*
 	-rmdir $(INSTALL_DATA)/$(IMAGESDIR)
 uninstall-sdl-manpage:
 	-rm -f $(MANDIR)/$(EXEC_SDL).6.gz
 
 uninstall: $(UNINSTALL_OPTIONAL)
-	-rm $(BINDIR)/$(EXEC)
+	-rm -f $(BINDIR)/$(EXEC)
 	-rm -f $(MANDIR)/$(GAME_TITLE).6.gz
 	-rm $(DOCDIR)/changelog.gz
 	-rmdir $(DOCDIR)
