@@ -12,7 +12,7 @@ and moving your armies.
 
 # Install
 
-[Installation instructions]({{ site.url }}/get)
+[Installation instructions]({{ site.baseurl }}/install)
 
 # Quick Start
 
