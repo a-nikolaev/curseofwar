@@ -43,7 +43,7 @@ Or, on a smaller map:
 ##Rules 
 
 1. Cities (`W#W`, `i=i`, and ` n `) increase your country's population
-2. Gold mines (`/$\`) give your gold, which is used to build new cities.
+2. Gold mines (`/$\`) give you gold, which is used to build new cities.
 3. Put flags on the map to move your army. Press space to add and remove flags.
 4. You play as a ruler of the green country.
 5. Computer opponents have different personalities and different approach to control their armies
