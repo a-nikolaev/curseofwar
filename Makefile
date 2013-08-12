@@ -14,6 +14,7 @@ MANDIR = $(DESTDIR)$(MANPREFIX)/man6
 DOCDIR = $(DESTDIR)$(PREFIX)/share/doc/$(GAME_TITLE)
 
 # Game resources directories
+INSTALL_DATA ?= $(DESTDIR)$(PREFIX)/share/$(GAME_TITLE)
 IMAGESDIR = images
 
 # Sources
@@ -43,7 +44,7 @@ ifdef SDL
  CFLAGS += $(shell sdl-config --cflags)
  LDLIBS += $(shell sdl-config --libs)
  EXEC = $(EXEC_SDL)
- # Install and uninstall resources
+ # Version-specific
  INSTALL_OPTIONAL = install-sdl-manpage
  UNINSTALL_OPTIONAL = uninstall-sdl-manpage
  ifdef INSTALL_DATA
@@ -55,7 +56,9 @@ else
  HDRS += $(HDRS_NCURSES)
  LDLIBS += -lncurses
  EXEC = $(EXEC_NCURSES)
- #No need to install/uninstall resources here, unless we make campaingns
+ # Version-specific
+ INSTALL_OPTIONAL = install-manpage install-changelog
+ UNINSTALL_OPTIONAL = uninstall-manpage uninstall-changelog
 endif
 
 VERSION=`cat VERSION`
@@ -76,6 +79,14 @@ $(EXEC): $(OBJS) $(HDRS)
 
 
 # Install
+install-manpage:
+	$(INSTALL) -m 755 -d $(MANDIR)
+	-sed "s/%VERSION%/$(VERSION)/g" $(GAME_TITLE).6 | gzip -c > $(MANDIR)/$(GAME_TITLE).6.gz
+	-chmod 644 $(MANDIR)/$(GAME_TITLE).6.gz
+install-changelog:
+	$(INSTALL) -m 755 -d $(DOCDIR)
+	-cat CHANGELOG | gzip -c > $(DOCDIR)/changelog.gz
+	-chmod 644 $(DOCDIR)/changelog.gz
 install-images:
 	$(INSTALL) -m 755 -d $(INSTALL_DATA)/$(IMAGESDIR)
 	for file in $(IMAGESDIR)/*; do \
@@ -88,25 +99,23 @@ install-sdl-manpage:
 
 install: all $(INSTALL_OPTIONAL) 
 	$(INSTALL) -m 755 -D $(EXEC) $(BINDIR)/$(EXEC)
-	$(INSTALL) -m 755 -d $(MANDIR)
-	-sed "s/%VERSION%/$(VERSION)/g" $(GAME_TITLE).6 | gzip -c > $(MANDIR)/$(GAME_TITLE).6.gz
-	-chmod 644 $(MANDIR)/$(GAME_TITLE).6.gz
-	$(INSTALL) -m 755 -d $(DOCDIR)
-	-cat CHANGELOG | gzip -c > $(DOCDIR)/changelog.gz
-	-chmod 644 $(DOCDIR)/changelog.gz
 
 # Uninstall
+uninstall-manpage:
+	-rm -f $(MANDIR)/$(GAME_TITLE).6.gz
+uninstall-changelog:
+	-rm $(DOCDIR)/changelog.gz
+	-rmdir $(DOCDIR)
+
 uninstall-images:
 	-rm -f $(INSTALL_DATA)/$(IMAGESDIR)/*
 	-rmdir $(INSTALL_DATA)/$(IMAGESDIR)
+	-rmdir $(INSTALL_DATA)
 uninstall-sdl-manpage:
 	-rm -f $(MANDIR)/$(EXEC_SDL).6.gz
 
 uninstall: $(UNINSTALL_OPTIONAL)
 	-rm -f $(BINDIR)/$(EXEC)
-	-rm -f $(MANDIR)/$(GAME_TITLE).6.gz
-	-rm $(DOCDIR)/changelog.gz
-	-rmdir $(DOCDIR)
 
 show-path:
 	@echo would install to ${BINDIR}
