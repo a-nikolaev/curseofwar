@@ -28,6 +28,9 @@
   #include <getopt.h>
 #endif
 
+#ifndef VERSION
+# define VERSION ""
+#endif
 
 void print_help() {
   printf(
@@ -74,6 +77,8 @@ void print_help() {
     "\tStart a client and connect to the provided server's IP-address.\n\n"
     "-c port\n"
     "\tClients's port (19150 is default).\n\n"
+    "-v\n"
+    "\tDisplay the version number\n\n"
     "-h\n"
     "\tDisplay this help \n\n"
   );
@@ -152,7 +157,7 @@ int get_options(int argc, char *argv[], struct basic_options *op, struct multi_o
 #ifndef WIN32
   opterr = 0;
   int c;
-  while ((c = getopt (argc, argv, "hrTW:H:i:l:q:d:s:R:S:E:e:C:c:")) != -1){
+  while ((c = getopt (argc, argv, "hvrTW:H:i:l:q:d:s:R:S:E:e:C:c:")) != -1){
     switch(c){
       case 'r': op->keep_random_flag = 1; break;
       case 'T': op->timeline_flag = 1; break;
@@ -266,6 +271,9 @@ int get_options(int argc, char *argv[], struct basic_options *op, struct multi_o
                 free(mop->val_client_port);
                 mop->val_client_port = strdup(optarg);
                 break;
+      case 'v':
+          printf("%s\n", VERSION);
+          return 1;
       case '?': case 'h':
           print_help();
           return 1;

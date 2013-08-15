@@ -61,7 +61,8 @@ else
  UNINSTALL_OPTIONAL = uninstall-manpage uninstall-changelog
 endif
 
-VERSION=`cat VERSION`
+VERSION=$(shell cat VERSION)
+CPPFLAGS += -DVERSION="\"$(VERSION)\""
 
 .PHONY: all clean cleanall
 

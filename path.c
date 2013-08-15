@@ -61,12 +61,14 @@ char *get_xdg_data_home() {
    3) ~/.curseofwar/
    4) /usr/local/share/curseofwar/
    5) /usr/share/curseofwar/
+   6) /usr/share/curseofwar-sdl/
+   7) /usr/share/curseofwar-common/
  */
 char **get_search_paths() {
   char *suffix = "/curseofwar/";
 
 #ifndef WIN32
-  int dirs_num = 5;
+  int dirs_num = 7;
   char **path = (char**) malloc(sizeof(char*) * (dirs_num + 1));
   
   path[0] = strdup("");
@@ -77,6 +79,8 @@ char **get_search_paths() {
   path[2] = concat(getenv("HOME"), "/.curseofwar/");
   path[3] = strdup("/usr/local/share/curseofwar/");
   path[4] = strdup("/usr/share/curseofwar/");
+  path[5] = strdup("/usr/share/curseofwar-sdl/");
+  path[6] = strdup("/usr/share/curseofwar-common/");
 #else
   int dirs_num = 1;
   char **path = (char**) malloc(sizeof(char*) * (dirs_num + 1));
