@@ -11,9 +11,9 @@ Ncurses version:
     $ make
 
 SDL version:
-
+    
     $ make SDL=yes
-  
+
 Install ncurses version
 -----------------------
 
@@ -23,56 +23,62 @@ To install, `make install` with `DESTDIR` defined:
 
 It copies:
 
-  * the executable to `$DESTDIR/usr/bin/` 
-  * the manpage(s) to `$DESTDIR/usr/share/man/man6/`
-  * the `changelog.gz` to `$DESTDIR/usr/share/doc/curseofwar/`
+* the executable `curseofwar` to `$DESTDIR/usr/bin/`
+* the manpage `curseofwar.6.gz` to `$DESTDIR/usr/share/man/man6/`
+* the `changelog.gz` to `$DESTDIR/usr/share/doc/curseofwar/`
 
 To uninstall:
-
+    
     # make DESTDIR=/path uninstall
 
-Install SDL version with all game data
---------------------------------------
+Install SDL version
+-------------------
 
-The SDL executable is searching for the game data (directory `images`) in the 
-following places:
-  
-1. `./`                           (Your current directory)
-2. `$XDG_DATA_HOME/curseofwar`    (Defaults to `~/.local/share/curseofwar`)
-3. `~/.curseofwar`                (If possible, use `~/.local/share/curseofwar`)
-4. `/usr/local/share/curseofwar` 
-5. `/usr/share/curseofwar`
-  
-Make sure to copy `images` in one of those folders. 
-  
-You can make use of the variable `INSTALL_DATA`:
-
-    # make SDL=yes DESTDIR=/path INSTALL_DATA=/game/data/path install
-  
-Or, simply, install and `cp` data:
+To install:
 
     # make SDL=yes DESTDIR=/path install
-    # cp -r images /game/data/path
 
+It copies:
+
+* the executable `curseofwar-sdl` to `$DESTDIR/usr/bin/`
+* the manpage `curseofwar-sdl.6.gz` to `$DESTDIR/usr/share/man/man6/`
+* `images` to `$DESTDIR/usr/share/curseofwar`
+
+The SDL executable is searching for the game data (directory `images`) in the
+following places:
+
+1. `./` (Your current directory)
+2. `$XDG_DATA_HOME/curseofwar` (Defaults to `~/.local/share/curseofwar`)
+3. `~/.curseofwar` (If possible, use `~/.local/share/curseofwar`)
+4. `/usr/local/share/curseofwar`
+5. `/usr/share/curseofwar`
+6. `/usr/share/curseofwar-sdl`
+7. `/usr/share/curseofwar-common`
+
+Make sure that `images` is one of those folders.
+
+You can make use of the variable `INSTALL_DATA` to install `images` to a specific
+place in your filesystem, instead of `$(DESTDIR)/usr/share/curseofwar`:
+
+    # make SDL=yes DESTDIR=/path INSTALL_DATA=/game/data/path install
 
 Example, how to build and install everything
 ============================================
 
-The following commands install both executables to `/usr/bin/`, and all data to 
+It installs both executables to `/usr/bin/`, and all game data to
 `/usr/share/curseofwar/`
 
 To build and install:
 
     $ make
-    $ make SDL=yes 
-    # make DESTDIR=/ INSTALL_DATA=/usr/share/curseofwar install
-    # make SDL=yes DESTDIR=/ INSTALL_DATA=/usr/share/curseofwar install
-    
+    $ make SDL=yes
+    # make DESTDIR=/ install
+    # make SDL=yes DESTDIR=/ install
+      
 Then to uninsitall, if necessary:
 
-    # make DESTDIR=/ INSTALL_DATA=/usr/share/curseofwar uninstall
-    # make SDL=yes DESTDIR=/ INSTALL_DATA=/usr/share/curseofwar uninstall
-    # rm -r /usr/share/curseofwar
+    # make SDL=yes DESTDIR=/ uninstall
+    # make DESTDIR=/ uninstall
 
 `DESTDIR=/` can be omitted here, but it's kept for completeness.
 

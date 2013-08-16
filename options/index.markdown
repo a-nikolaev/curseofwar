@@ -52,6 +52,9 @@ Start a client and connect to the provided server's IP-address.
 `-c port`
 Clients's port (19150 is default).
 
+`-v`
+Display the version number
+
 `-h`
 Display help information
 
