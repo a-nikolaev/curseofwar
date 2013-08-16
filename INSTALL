@@ -44,6 +44,8 @@ Install SDL version
     3) ~/.curseofwar                (If possible, use ~/.local/share/curseofwar)
     4) /usr/local/share/curseofwar 
     5) /usr/share/curseofwar
+    5) /usr/share/curseofwar-sdl
+    5) /usr/share/curseofwar-common
   
   Make sure that "images" is one of those folders. 
   

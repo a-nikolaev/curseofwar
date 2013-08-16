@@ -1,4 +1,4 @@
-incoming version
+version 1.2.0 2013-08-16
   * New SDL executable for client and singleplayer (can be compiled in Windows using CMake)
   * Search for game data in several standard folders
   * Improved cursor movement at the edges of the map

@@ -90,6 +90,9 @@ Command line arguments
   -c port
     Clients's port (19150 is default).
 
+  -v
+    Display the version number
+
   -h
     Display help information
 
