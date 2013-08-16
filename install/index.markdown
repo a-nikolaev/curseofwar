@@ -5,10 +5,11 @@ title: How to install the game
 
 # Packages for popular Linux distributions
 
-* Arch Linux: [AUR stable](https://aur.archlinux.org/packages/curseofwar/) or [AUR git](https://aur.archlinux.org/packages/curseofwar-git/).
+* Arch Linux: [AUR stable](https://aur.archlinux.org/packages/curseofwar/) or [AUR git](https://aur.archlinux.org/packages/curseofwar-git/),
+or [AUR (ncurses and SDL) git](https://aur.archlinux.org/packages/curseofwar-with-sdl-git/).
 * CRUX: [port](http://crux.nu/portdb/?a=repo&q=doom).
-* Debian: 
-* Ubuntu: [PPA team](https://launchpad.net/~curseofwar). 
+* Debian: accepted to Debian unstable
+* Ubuntu: [PPA team](https://launchpad.net/~curseofwar) - packages for ncurses and/or SDL. 
 
 # Build from sources
 It's not hard to build the game from sources. 
