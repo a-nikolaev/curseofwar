@@ -6,11 +6,12 @@ title: Home
 [![screenshot3](http://i.imgur.com/QhsgqRbs.png)](http://i.imgur.com/QhsgqRb.png)
 [![screenshot2](http://i.imgur.com/JoVcPvTs.png)](http://i.imgur.com/JoVcPvT.png) 
 [![gif-animation](http://i.imgur.com/K2AV6zSs.gif)](http://i.imgur.com/K2AV6zS.gif) 
-[![screenshot-sdl1](http://i.imgur.com/FlfVmxqs.png)](http://i.imgur.com/FlfVmxq.png) 
-[![screenshot-sdl2](http://i.imgur.com/fJ8VByNs.png)](http://i.imgur.com/fJ8VByN.png) 
+[![screenshot-sdl1](http://i.imgur.com/i4CgNVes.png)](http://i.imgur.com/i4CgNVe.png) 
+[![screenshot-sdl2](http://i.imgur.com/eUFmyjUs.png)](http://i.imgur.com/eUFmyjU.png) 
+[![screenshot-sdl3](http://i.imgur.com/YM0nYQvs.png)](http://i.imgur.com/YM0nYQv.png) 
 
-**Curse of War** is a fast-paced action strategy game for Linux implemented using 
-ncurses user interface.
+**Curse of War** is a fast-paced action strategy game for Linux originally 
+implemented using ncurses user interface. An SDL graphical version is also available.
 
 Unlike most RTS, you are not controlling units, but focus on high-level 
 strategic planning: Building infrastructure, securing resources, 
