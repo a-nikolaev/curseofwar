@@ -19,7 +19,9 @@ and moving your armies.
 
 **Influences:** Globulation2, Liquidwar, Settlers, StarCraft, various tty games, roguelikes.
 
-**&#9654; Watch asciicasts**: [One](http://ascii.io/a/4950), [Two](http://ascii.io/a/4951).
+**&#9654;** 
+Watch youtube videos: [[1]](http://youtu.be/FZH4qbIxpx4), [[2]](http://youtu.be/Egh3Jw-XafU).
+Or asciicasts: [[3]](http://ascii.io/a/4950), [[4]](http://ascii.io/a/4951).
 
 <!--
 ## Videos
