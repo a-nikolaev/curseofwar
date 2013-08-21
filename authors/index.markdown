@@ -10,7 +10,7 @@ Programming, graphics, AUR git packages.
 Debian and Ubuntu packages, manpages, Makefile.  
 
 **Maximilian Dietrich**  
-CRUX package, manpages and Makefile.  
+CRUX packages, manpages and Makefile.  
 
 **Kirill Dmitrenko**  
 Minor contribution to the Makefile.  
