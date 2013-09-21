@@ -39,6 +39,23 @@ div.page {
   border: 0.3em solid #060608;
 }
 
+div.footer {
+  //background-color:#0B0B0D; 
+  vertical-align: middle;
+
+  margin-top:0em;
+  margin-bottom: -3em;
+  margin-left:-3.06em;
+  margin-right:-3.08em;
+  padding-left:2em;
+  padding-top:1.3em;
+  padding-bottom:1.2em;
+
+  min-height:100%;
+}
+.footer img {border:none;}
+.footer a {text-decoration:none;}
+
 div#nav {
   margin-top:-1em;
   margin-bottom: 2em;
