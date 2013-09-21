@@ -3,4 +3,6 @@
 *.swp
 /curseofwar
 /curseofwar-sdl
+/curseofwar.exe
+/curseofwar-sdl.exe
 _site

@@ -170,7 +170,7 @@ void output_grid(struct state *st, struct ui *ui, int ktime) {
           break;
         }
       }
-      if (false && !b){
+      if (0 && !b){
         move(POSY(ui,i,j), POSX(ui,i,j)-1);
         addstr("     "); 
       }

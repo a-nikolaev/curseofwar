@@ -24,7 +24,13 @@
 #include "state.h"
 #include "main-common.h"
 
-#ifndef WIN32 // For now, we deactivate command line options parsing for windows versions
+#ifdef WIN32
+# ifndef MINGW32
+#  define NOGETOPT 1
+# endif
+#endif
+
+#ifndef NOGETOPT // For now, we deactivate command line options parsing for windows versions
   #include <getopt.h>
 #endif
 
@@ -154,7 +160,7 @@ int get_options(int argc, char *argv[], struct basic_options *op, struct multi_o
   mop->val_server_port = strdup(DEF_SERVER_PORT);
   
   int conditions_were_set = 0;
-#ifndef WIN32
+#ifndef NOGETOPT
   opterr = 0;
   int c;
   while ((c = getopt (argc, argv, "hvrTW:H:i:l:q:d:s:R:S:E:e:C:c:")) != -1){

@@ -1,0 +1,62 @@
+SHELL = /bin/sh
+CC      = i486-mingw32-gcc
+EXEC_NCURSES = curseofwar.exe
+EXEC_SDL = curseofwar-sdl.exe
+
+GAME_TITLE = $(EXEC_NCURSES)
+
+MINGWPATH=/usr/i486-mingw32/
+
+# Sources
+SRCS_INDEP = grid.c state.c king.c output-common.c path.c main-common.c
+SRCS_NCURSES = output.c main.c 
+SRCS_SDL = output-sdl.c main-sdl.c
+
+HDRS_INDEP = common.h messaging.h $(SRCS_INDEP:.c=.h)
+HDRS_NCURSES = output.h
+HDRS_SDL = output-sdl.h
+
+OBJS_INDEP = $(SRCS_INDEP:.c=.o)
+OBJS_NCURSES = $(SRCS_NCURSES:.c=.o)
+OBJS_SDL = $(SRCS_SDL:.c=.o)
+
+EXECS = $(EXEC_NCURSES) $(EXEC_SDL)
+CFLAGS += -Wall -O2
+LDLIBS += -lm
+
+# Common sources and header
+OBJS = $(OBJS_INDEP) 
+HDRS = $(HDRS_INDEP) 
+# SDL or ncurses
+ifdef SDL
+ OBJS += $(OBJS_SDL)
+ HDRS += $(HDRS_SDL)
+ CFLAGS += $(shell $(MINGWPATH)bin/sdl-config --cflags)
+ LDLIBS += $(shell $(MINGWPATH)bin/sdl-config --libs)
+ EXEC = $(EXEC_SDL)
+else
+ OBJS += $(OBJS_NCURSES)
+ HDRS += $(HDRS_NCURSES)
+ LDLIBS += -lncurses
+ EXEC = $(EXEC_NCURSES)
+endif
+
+VERSION=$(shell cat VERSION)
+CPPFLAGS += -DVERSION="\"$(VERSION)\"" -DMINGW32=1
+
+.PHONY: all clean cleanall
+
+# Build
+all: $(EXEC)
+
+clean:
+	-rm -f $(OBJS_INDEP) $(OBJS_NCURSES) $(OBJS_SDL) $(EXECS)
+
+%.o: %.c $(HDRS)  
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
+
+$(EXEC): $(OBJS) $(HDRS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $(EXEC)
+
+show-path:
+	@echo would install to ${BINDIR}
