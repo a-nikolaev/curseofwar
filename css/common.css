@@ -53,8 +53,10 @@ div.footer {
 
   min-height:100%;
 }
-.footer img {border:none;}
+.footer img {border:none; vertical-align: middle;}
 .footer a {text-decoration:none;}
+.footer span {vertical-align: middle;}
+
 
 div#nav {
   margin-top:-1em;
