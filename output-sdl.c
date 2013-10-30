@@ -380,7 +380,7 @@ void output_sdl (SDL_Surface *tileset, SDL_Surface *typeface, SDL_Surface *uisur
   /* line */
   int line_width=555;
   struct SDL_Rect src_line_rect = {0, 0, line_width, 1};
-  struct SDL_Rect dst_line_rect = {.x=TILE_WIDTH + 75*TYPE_WIDTH/2 - line_width/2, .y=screen_y + (TYPE_HEIGHT*5/2), .w=line_width, .h=1};
+  struct SDL_Rect dst_line_rect = {TILE_WIDTH + 75*TYPE_WIDTH/2 - line_width/2, screen_y + (TYPE_HEIGHT*5/2), line_width, 1};
   SDL_BlitSurface(uisurf, &src_line_rect, screen, &dst_line_rect);
 
 }
