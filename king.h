@@ -30,9 +30,9 @@ struct country {
   long gold;
 };
 
-#define PRICE_VILLAGE 150
-#define PRICE_TOWN 300
-#define PRICE_CASTLE 600
+#define PRICE_VILLAGE 160
+#define PRICE_TOWN 240
+#define PRICE_CASTLE 320
 
 /*
   build(&g, &c, pl, i, j)

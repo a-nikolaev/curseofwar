@@ -201,7 +201,7 @@ void output_grid(struct state *st, struct ui *ui, int ktime) {
   mvaddstr(y, 8, buf);
   mvaddstr(y, 8, buf);
   attrset(A_NORMAL | COLOR_PAIR(1));
-  mvaddstr(y+1, 0, " Prices: 150, 300, 600.");
+  mvaddstr(y+1, 0, " Prices: 160, 240, 320.");
   
   move(y+2, 1);
   addstr("Speed: ");

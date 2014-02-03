@@ -332,7 +332,7 @@ void output_sdl (SDL_Surface *tileset, SDL_Surface *typeface, SDL_Surface *uisur
   sprintf(buf, "%li     ", s->country[s->controlled].gold);
   output_string_alt(typeface, s->controlled, screen, buf, TILE_WIDTH + 6*TYPE_WIDTH, screen_y);
   
-  sprintf(buf, "Prices: 150 300 600");
+  sprintf(buf, "Prices: 160 240 320");
   output_string(typeface, screen, buf, TILE_WIDTH, screen_y + 1*TYPE_HEIGHT);
   
   int y,m,d;
