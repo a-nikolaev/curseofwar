@@ -28,6 +28,7 @@ LDLIBS += -lm
 OBJS = $(OBJS_INDEP) 
 HDRS = $(HDRS_INDEP) 
 # SDL or ncurses
+SDL ?= y
 ifdef SDL
  OBJS += $(OBJS_SDL)
  HDRS += $(HDRS_SDL)
