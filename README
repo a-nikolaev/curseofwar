@@ -133,7 +133,7 @@ How to play
   People
   ------
 
-  People are your primary resource. Thriving popluation is essential for your
+  People are your primary resource. Thriving population is essential for your
   victory.
   
   Every tile can support at most 499 people from each country.
@@ -231,7 +231,7 @@ Multiplayer
   the server. Not all data is sent to clients (e.g. info about population is 
   not sent in full).
 
-  Multiplayer mode is at relatively early development stage. Changes may occure
+  Multiplayer mode is at relatively early development stage. Changes may occur
   at any moment. When you play with other people, make sure that you are using
   the same version of the game. Hopefully, game's client-server communication 
   protocol will be improved in future. All communication is made via UDP. 
