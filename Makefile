@@ -18,9 +18,9 @@ INSTALL_DATA ?= $(DESTDIR)$(PREFIX)/share/$(GAME_TITLE)
 IMAGESDIR = images
 
 # Sources
-SRCS_INDEP = grid.c state.c king.c network.c client.c server.c output-common.c path.c main-common.c
+SRCS_INDEP = grid.c state.c king.c network.c client.c server.c output-common.c main-common.c
 SRCS_NCURSES = output.c main.c 
-SRCS_SDL = output-sdl.c main-sdl.c
+SRCS_SDL = path.c output-sdl.c main-sdl.c
 
 HDRS_INDEP = common.h messaging.h $(SRCS_INDEP:.c=.h)
 HDRS_NCURSES = output.h
