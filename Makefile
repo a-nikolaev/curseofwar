@@ -41,8 +41,8 @@ HDRS = $(HDRS_INDEP)
 ifdef SDL
  OBJS += $(OBJS_SDL)
  HDRS += $(HDRS_SDL)
- CFLAGS += $(shell sdl-config --cflags)
- LDLIBS += $(shell sdl-config --libs)
+ CFLAGS += $(shell pkg-config sdl --cflags)
+ LDLIBS += $(shell pkg-config sdl --libs)
  EXEC = $(EXEC_SDL)
  # Version-specific
  INSTALL_OPTIONAL = install-sdl-manpage
