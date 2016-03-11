@@ -13,6 +13,8 @@ BINDIR = $(DESTDIR)$(PREFIX)/bin
 MANDIR = $(DESTDIR)$(MANPREFIX)/man6
 DOCDIR = $(DESTDIR)$(PREFIX)/share/doc/$(GAME_TITLE)
 
+-include config.mak
+
 # Game resources directories
 INSTALL_DATA ?= $(DESTDIR)$(PREFIX)/share/$(GAME_TITLE)
 IMAGESDIR = images
