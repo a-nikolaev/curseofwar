@@ -292,7 +292,10 @@ void simulate(struct state *s) {
       int defender_dmg = 0;
       for(p=0; p<MAX_PLAYER; ++p){
         enemy_pop[p] = total_pop - my_pop[p];
-        int dmg = rnd_round( (float)enemy_pop[p] * my_pop[p] / total_pop );
+        int dmg = 0;
+        if(total_pop!=0) {
+          dmg = rnd_round( (float)enemy_pop[p] * my_pop[p] / total_pop );
+        }
         t[i][j].units[p][citizen] = MAX(my_pop[p] - dmg, 0);
         
         if (t[i][j].pl == p)
