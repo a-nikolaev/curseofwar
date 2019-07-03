@@ -68,7 +68,7 @@ char **get_search_paths() {
   char *suffix = "/curseofwar/";
 
 #ifndef WIN32
-  int dirs_num = 7;
+  int dirs_num = 8;
   char **path = (char**) malloc(sizeof(char*) * (dirs_num + 1));
   
   path[0] = strdup("");
@@ -81,6 +81,7 @@ char **get_search_paths() {
   path[4] = strdup("/usr/share/curseofwar/");
   path[5] = strdup("/usr/share/curseofwar-sdl/");
   path[6] = strdup("/usr/share/curseofwar-common/");
+  path[7] = strdup(INSTALL_DATA);
 #else
   int dirs_num = 1;
   char **path = (char**) malloc(sizeof(char*) * (dirs_num + 1));

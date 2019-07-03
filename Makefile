@@ -64,6 +64,8 @@ endif
 VERSION=$(shell cat VERSION)
 CPPFLAGS += -DVERSION="\"$(VERSION)\""
 
+CPPFLAGS += -DINSTALL_DATA="\"$(INSTALL_DATA)/\""
+
 .PHONY: all clean cleanall
 
 # Build
