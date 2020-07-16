@@ -44,6 +44,12 @@
 /* delay in milliseconds */
 #define TIME_DELAY 10
 
+static int in_fullscreen;
+static void toggle_fullscreen(SDL_Surface *surface) {
+	in_fullscreen = !in_fullscreen;
+	SDL_WM_ToggleFullScreen(surface);
+}
+
 void run(struct state *st, struct ui *ui, 
     SDL_Surface *screen, SDL_Surface *tileset, SDL_Surface *typeface, SDL_Surface *uisurf){
   /* tile variation */
@@ -77,6 +83,11 @@ void run(struct state *st, struct ui *ui,
           case SDL_KEYDOWN:
             c = '\0';
             switch (event.key.keysym.sym) {
+              case SDLK_RETURN:
+                if((event.key.keysym.mod & KMOD_LALT) ||
+                   (event.key.keysym.mod & KMOD_RALT))
+                    toggle_fullscreen(screen);
+                break;
               case SDLK_LEFT: c = 'h'; break;
               case SDLK_RIGHT: c = 'l'; break;
               case SDLK_UP: c = 'k'; break;
@@ -161,6 +172,11 @@ void run_client(struct state *st, struct ui *ui,
           case SDL_KEYDOWN:
             c = '\0';
             switch (event.key.keysym.sym) {
+              case SDLK_RETURN:
+                if((event.key.keysym.mod & KMOD_LALT) ||
+                   (event.key.keysym.mod & KMOD_RALT))
+                    toggle_fullscreen(screen);
+                break;
               case SDLK_LEFT: c = 'h'; break;
               case SDLK_RIGHT: c = 'l'; break;
               case SDLK_UP: c = 'k'; break;
@@ -301,6 +317,8 @@ int main(int argc, char *argv[]) {
     else run_client(&st, &ui, screen, tileset, typeface, uisurf, mop.val_server_addr, mop.val_server_port, mop.val_client_port);
   }
 #endif
+
+  if(in_fullscreen) toggle_fullscreen(screen);
 
   /* Finalize */
   SDL_FreeSurface(tileset);
