@@ -12,6 +12,12 @@ or [AUR (ncurses and SDL) git](https://aur.archlinux.org/packages/curseofwar-wit
 * Debian: [unstable](http://packages.debian.org/unstable/main/curseofwar)
 * Ubuntu: [PPA team](https://launchpad.net/~curseofwar) - ncurses and/or SDL.
 
+# macOS
+Install [curseofwar (ncurses version)](https://formulae.brew.sh/formula/curseofwar)
+via [Homebrew](https://brew.sh/)
+
+    $ brew install curseofwar
+
 # Build from sources
 It's not hard to build the game from sources. 
   
