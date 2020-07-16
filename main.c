@@ -333,6 +333,7 @@ int main(int argc, char* argv[]){
   curs_set(1);
   clear();
   endwin();
+  fcntl(0, F_SETFL, fd_flags);
 
   if (!mop.multiplayer_flag || mop.server_flag)
     printf ("Random seed was %i\n", st.map_seed);
