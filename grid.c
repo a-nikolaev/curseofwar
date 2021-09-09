@@ -449,6 +449,7 @@ int conflict (struct grid *g, struct loc loc_arr[], int available_loc_num,
 
   /* free allocated memory */
   free(sh_players);
+  free(sh_players_comp);
 
   return 0;
 }
