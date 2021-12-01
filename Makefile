@@ -13,6 +13,8 @@ BINDIR = $(DESTDIR)$(PREFIX)/bin
 MANDIR = $(DESTDIR)$(MANPREFIX)/man6
 DOCDIR = $(DESTDIR)$(PREFIX)/share/doc/$(GAME_TITLE)
 
+-include config.mak
+
 # Game resources directories
 INSTALL_DATA ?= $(DESTDIR)$(PREFIX)/share/$(GAME_TITLE)
 IMAGESDIR = images
@@ -31,7 +33,7 @@ OBJS_NCURSES = $(SRCS_NCURSES:.c=.o)
 OBJS_SDL = $(SRCS_SDL:.c=.o)
 
 EXECS = $(EXEC_NCURSES) $(EXEC_SDL)
-CFLAGS += -Wall -O2
+CFLAGS ?= -Wall -O2
 LDLIBS += -lm
 
 # Common sources and header
@@ -41,8 +43,8 @@ HDRS = $(HDRS_INDEP)
 ifdef SDL
  OBJS += $(OBJS_SDL)
  HDRS += $(HDRS_SDL)
- CFLAGS += $(shell sdl-config --cflags)
- LDLIBS += $(shell sdl-config --libs)
+ CFLAGS += $(shell pkg-config sdl --cflags)
+ LDLIBS += $(shell pkg-config sdl --libs)
  EXEC = $(EXEC_SDL)
  # Version-specific
  INSTALL_OPTIONAL = install-sdl-manpage
