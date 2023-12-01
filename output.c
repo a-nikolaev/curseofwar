@@ -22,10 +22,6 @@
 #include <curses.h>
 #include <string.h>
 
-/* Macros to map tiles location (i,j) to its position on the screen */
-#define POSY(ui,i,j) ((j)+1)
-#define POSX(ui,i,j) ((i)*4 + (j)*2 + 1) - (ui->xskip*(CELL_STR_LEN+1))
-
 /* Returns a color_pair number for a player p */
 int player_color(int p) {
   switch(p) {
@@ -222,15 +218,15 @@ void output_grid(struct state *st, struct ui *ui, int ktime) {
   int text_style = A_NORMAL | COLOR_PAIR(1);
   int key_style = player_style(st->controlled);
   
-  output_key (y+4, 1, "Space", key_style, "add/remove a flag", text_style);
-  output_key (y+5, 1, "R or V", key_style, "build", text_style);
+  output_key (y+4, 1, "Space or LMB", key_style, "add/remove a flag", text_style);
+  output_key (y+5, 1, "R or V or RMB", key_style, "build", text_style);
   
-  output_key (y+4, 30, "X", key_style, "remove all flags", text_style);
-  output_key (y+5, 30, "C", key_style, "remove 50\% of flags", text_style);
+  output_key (y+4, 36, "X", key_style, "remove all flags", text_style);
+  output_key (y+5, 36, "C", key_style, "remove 50\% of flags", text_style);
   
-  output_key (y+5, 57, "S", key_style, "slow down", text_style);
-  output_key (y+4, 57, "F", key_style, "speed up", text_style);
-  output_key (y+6, 57, "P", key_style, "pause", text_style);
+  output_key (y+5, 63, "S", key_style, "slow down", text_style);
+  output_key (y+4, 63, "F", key_style, "speed up", text_style);
+  output_key (y+6, 63, "P", key_style, "pause", text_style);
   
   mvaddstr(y+1, 30, " Population at the cursor:");
   for(p=0; p<MAX_PLAYER; ++p) {

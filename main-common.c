@@ -24,6 +24,9 @@
 #include "state.h"
 #include "main-common.h"
 
+/* We need curses lib to process mouse events */
+#include <curses.h>
+
 #ifdef WIN32
 # ifndef MINGW32
 #  define NOGETOPT 1
@@ -209,7 +212,7 @@ int get_options(int argc, char *argv[], struct basic_options *op, struct multi_o
                 };
                 break;
       case 'R': { char* endptr = NULL;
-                  op->map_seed = abs(strtol(optarg, &endptr, 10));
+                  op->map_seed = labs(strtol(optarg, &endptr, 10));
                   if (*endptr != '\0' || *optarg == '\0') {
                     print_help();
                     return 1;
@@ -312,12 +315,36 @@ int get_options(int argc, char *argv[], struct basic_options *op, struct multi_o
   return 0;
 }
 
-int singleplayer_process_input (struct state *st, struct ui *ui, char c) {
+int singleplayer_process_mouse (struct state *st, struct ui *ui) {
+  MEVENT mevt;
+
+  int cursi = ui->cursor.i;
+  int cursj = ui->cursor.j;
+
+  if (getmouse(&mevt) != OK)
+    return 1;
+
+  cursj = UNPOSY(ui, mevt.x, mevt.y);
+  cursi = UNPOSX(ui, mevt.x, mevt.y);
+
+  adjust_cursor(st, ui, cursi, cursj);
+
+  if (mevt.bstate & BUTTON1_RELEASED)
+    toggle_flag(st, ui);
+  else if (mevt.bstate & BUTTON3_RELEASED)
+    build (&st->grid, &st->country[st->controlled], st->controlled, ui->cursor.i, ui->cursor.j);
+
+  return 0;
+}
+
+int singleplayer_process_input (struct state *st, struct ui *ui, int c) {
   int cursi = ui->cursor.i;
   int cursj = ui->cursor.j;
   switch (c) {
     case 'q': case 'Q':
       return 1;
+    case KEY_MOUSE:
+      return singleplayer_process_mouse(st, ui);
     case 'f':
       st->prev_speed = st->speed;
       st->speed = faster(st->speed);
@@ -334,27 +361,24 @@ int singleplayer_process_input (struct state *st, struct ui *ui, char c) {
         st->speed = sp_pause;
       }
       break;
-    case 'h': case K_LEFT:
+    case 'h': case K_LEFT: case KEY_LEFT:
       cursi--;
       break;
-    case 'l': case K_RIGHT:
+    case 'l': case K_RIGHT: case KEY_RIGHT:
       cursi++;
       break;
-    case 'k': case K_UP:
+    case 'k': case K_UP: case KEY_UP:
       cursj--;
       if (cursj % 2 == 1)
         cursi++;
       break;
-    case 'j': case K_DOWN:
+    case 'j': case K_DOWN: case KEY_DOWN:
       cursj++;
       if (cursj % 2 == 0)
         cursi--;
       break;
     case ' ':
-      if (st->fg[st->controlled].flag[ui->cursor.i][ui->cursor.j] == 0)
-        add_flag (&st->grid, &st->fg[st->controlled], ui->cursor.i, ui->cursor.j, FLAG_POWER);
-      else
-        remove_flag (&st->grid, &st->fg[st->controlled], ui->cursor.i, ui->cursor.j, FLAG_POWER);
+      toggle_flag(st, ui);
       break;
     case 'x':
       remove_flags_with_prob (&st->grid, &st->fg[st->controlled], 1.0);

@@ -274,6 +274,15 @@ int main(int argc, char* argv[]){
   clear();       /* clear the screen */
   curs_set(0);   /* hide the cursor */
 
+  /* Helps to process mouse events correctly */
+  keypad(stdscr, TRUE);
+
+  /* Makes all getch family of functions non-blocking */
+  nodelay(stdscr, TRUE);
+
+  /* Enable all mouse event and also record mouse position */
+  mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
+
   use_default_colors();
   init_pair(0, COLOR_WHITE, COLOR_BLACK);
   init_pair(1, COLOR_WHITE, COLOR_BLACK);
@@ -379,41 +388,36 @@ int dialog_quit_confirm(struct state *st, struct ui *ui) {
 
 int update_from_input( struct state *st, struct ui *ui )
 {
-    int c;
-    char buf[1];
-    int finished=0;
+  int input;
+  int finished = 0;
 
-    while ( fread(buf, 1, 1, stdin) == 1 ) {
-      c = buf[0];
-      switch(c){
-        case 'q': case 'Q':
-          finished = dialog_quit_confirm(st, ui);                     /* quit program */
-          break;
-        default:
-          finished = singleplayer_process_input (st, ui, c);
-      }
-    }                
-    return finished;
+  input = getch();
+  switch(input) {
+    case 'q': case 'Q':
+      finished = dialog_quit_confirm(st, ui);
+      break;
+    default:
+      singleplayer_process_input(st, ui, input);
+  }
+
+  return finished;
 }
 
 /* client version */
 int update_from_input_client ( struct state *st, struct ui *ui, int sfd, struct addrinfo *srv_addr)
 {
-    int c;
-    char buf[1];
-    int finished=0;
+  int input;
+  int finished = 0;
 
-    while ( fread(buf, 1, 1, stdin) == 1 ) {
-      c = buf[0];
-      switch (c){
-        case 'q': case 'Q':
-          finished = dialog_quit_confirm(st, ui);                     /* quit program */
-          break;
-        default:
-          finished = client_process_input (st, ui, c, sfd, srv_addr);
-      }
-    }                
-    return finished;
+  input = getch();
+  switch (input) {
+    case 'q': case 'Q':
+      finished = dialog_quit_confirm(st, ui);                     /* quit program */
+      break;
+    default:
+      finished = client_process_input (st, ui, input, sfd, srv_addr);
+  }
+  return finished;
 }
 
 /* server version */

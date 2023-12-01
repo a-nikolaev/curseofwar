@@ -135,6 +135,20 @@ struct state {
  */
 void state_init(struct state *s, struct basic_options *op, struct multi_options *mop);
 
+/* Places or removes a flag at current ui->cursor position 
+ * depending on if the flag is already placed there or not
+ */
+void inline toggle_flag (struct state *st, struct ui *ui) {
+  if (!st || !ui)
+    return;
+
+  if (st->fg[st->controlled].flag[ui->cursor.i][ui->cursor.j] == 0)
+    add_flag (&st->grid, &st->fg[st->controlled], ui->cursor.i, ui->cursor.j, FLAG_POWER);
+  else
+    remove_flag (&st->grid, &st->fg[st->controlled], ui->cursor.i, ui->cursor.j, FLAG_POWER);
+}
+
+
 /* compute the cursor location, and xskip */
 void ui_init(struct state *s, struct ui *ui);
 

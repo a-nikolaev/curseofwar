@@ -20,6 +20,8 @@
 #include "client.h"
 #include "state.h"
 
+#include <curses.h>
+
 int client_init ();
 
 int client_connect ();
@@ -93,7 +95,29 @@ int client_receive_msg_s (int sfd, struct state *st) {
   return msg;
 }
 
-int client_process_input (struct state *st, struct ui *ui, char c, int sfd, struct addrinfo *srv_addr) {
+int client_process_mouse (struct state *st, struct ui *ui, int sfd, struct addrinfo *srv_addr) {
+  MEVENT mevt;
+
+  int cursi = ui->cursor.i;
+  int cursj = ui->cursor.j;
+
+  if (getmouse(&mevt) != OK)
+    return 1;
+
+  cursj = UNPOSY(ui, mevt.x, mevt.y);
+  cursi = UNPOSX(ui, mevt.x, mevt.y);
+
+  adjust_cursor(st, ui, cursi, cursj);
+
+  if (mevt.bstate & BUTTON1_RELEASED)
+    client_toggle_flag(st, ui, sfd, srv_addr);
+  else if (mevt.bstate & BUTTON3_RELEASED)
+    send_msg_c (sfd, srv_addr, MSG_C_BUILD, ui->cursor.i, ui->cursor.j, 0);
+
+  return 0;
+}
+
+int client_process_input (struct state *st, struct ui *ui, int c, int sfd, struct addrinfo *srv_addr) {
   int cursi = ui->cursor.i;
   int cursj = ui->cursor.j;
 
@@ -101,6 +125,8 @@ int client_process_input (struct state *st, struct ui *ui, char c, int sfd, stru
       case 'Q':
       case 'q': 
         return 1;                     /* quit program */
+      case KEY_MOUSE:
+        return client_process_mouse (st, ui, sfd, srv_addr);
       /*    
       case 'f':
           st->prev_speed = st->speed;
@@ -118,18 +144,18 @@ int client_process_input (struct state *st, struct ui *ui, char c, int sfd, stru
           send_msg_c (sfd, srv_addr, MSG_C_UNPAUSE, 0, 0, 0);
         }
         break;
-      case 'h': case K_LEFT:
+      case 'h': case K_LEFT: case KEY_LEFT:
         cursi--;
         break;
-      case 'l': case K_RIGHT:
+      case 'l': case K_RIGHT: case KEY_RIGHT:
         cursi++;
         break;
-      case 'k': case K_UP:
+      case 'k': case K_UP: case KEY_UP:
         cursj--;
         if (cursj % 2 == 1)
           cursi++;
         break;
-      case 'j': case K_DOWN:
+      case 'j': case K_DOWN: case KEY_DOWN:
         cursj++;
         if (cursj % 2 == 0)
           cursi--;

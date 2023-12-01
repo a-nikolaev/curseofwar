@@ -143,7 +143,6 @@ void state_init(struct state *s, struct basic_options *op, struct multi_options 
   }
 }
 
-
 void ui_init(struct state *s, struct ui *ui) {
   /* cursor location */
   ui->cursor.i = s->grid.width/2;
