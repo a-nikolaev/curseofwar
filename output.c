@@ -22,10 +22,6 @@
 #include <curses.h>
 #include <string.h>
 
-/* Macros to map tiles location (i,j) to its position on the screen */
-#define POSY(ui,i,j) ((j)+1)
-#define POSX(ui,i,j) ((i)*4 + (j)*2 + 1) - (ui->xskip*(CELL_STR_LEN+1))
-
 /* Returns a color_pair number for a player p */
 int player_color(int p) {
   switch(p) {
